@@ -19,6 +19,7 @@
   color: brown;
   align-self: center;
   cursor: pointer;
+  font-size: 36px;
 }
 
 .hidden {
@@ -28,6 +29,7 @@
 button {
   font-size: 24px;
   max-width: 100px;
+  margin-left: 400px;
 }
 
 .wrapper{
@@ -38,6 +40,7 @@ button {
 #playerBanner {
   font-size: 30px;
   color: black;
+  margin-top: 100px;
 }
 
 #finished {
@@ -49,4 +52,5 @@ width: 35%
 
 .instructions {
   font-size: 22px;
+  margin: 50px
 }
