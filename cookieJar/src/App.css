@@ -1,23 +1,19 @@
 .h1 {
-  margin: 10vw;
   max-width: 50vw;
-  padding-left: 10vw;
 }
 
 .jar {
-  border: 4px solid black;
-  padding: 1vw;
-  margin: 1vh;
-  height: 8vh;
-  width: 70vw;
+  border: 2px solid black;
+  margin: 20px;
+  width: 50vw;
   font-size: 28px;
   background: lightcyan;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   justify-items: center;
-  
+  justify-self: center;
 }
 .cookie {
   color: brown;
@@ -33,7 +29,7 @@
 button {
   font-size: 24px;
   max-width: 100px;
-  margin-left: 30vw;
+  margin-left: 400px;
 }
 
 .wrapper{
@@ -44,7 +40,7 @@ button {
 #playerBanner {
   font-size: 30px;
   color: black;
-  margin-top: 2vh;
+  margin-top: 100px;
 }
 
 #finished {
@@ -56,5 +52,5 @@ width: 35%
 
 .instructions {
   font-size: 22px;
-  margin: 2vh
+  margin: 50px
 }
