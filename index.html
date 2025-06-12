@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Cookie Jar</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container wrapper">
+    <h1>Don't Take The Last Cookie</h1>
+    <div class="instructions">Take turns pulling cookies out of the jar. You may only pull from one jar on your turn. You must take at least one cookie, don't take the last one!</div>
+    <div class="jar container" id="jar1">
+      Jar 1
+      <p class="cookie" id="11">(#)</p>
+      <p class="cookie" id="12">(#)</p>
+      <p class="cookie" id="13">(#)</p>
+    </div>
+    <div class="jar container" id="jar2">
+      Jar 2
+      <p class="cookie" id="21">(#)</p>
+      <p class="cookie" id="22">(#)</p>
+      <p class="cookie" id="23">(#)</p>
+      <p class="cookie" id="24">(#)</p>
+      <p class="cookie" id="25">(#)</p>
+    </div>
+    <div class="jar container" id="jar3">
+      Jar 3
+      <p class="cookie" id="31">(#)</p>
+      <p class="cookie" id="32">(#)</p>
+      <p class="cookie" id="33">(#)</p>
+      <p class="cookie" id="34">(#)</p>
+      <p class="cookie" id="35">(#)</p>
+      <p class="cookie" id="36">(#)</p>
+      <p class="cookie" id="37">(#)</p>
+    </div>
+<br>
+    <button>Done</button>
+    <br>
+    <div id="playerBanner"></div>
+    <div class="hidden" id="finished">Loser!</div>
+</div>
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+      crossorigin="anonymous"
+    ></script>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
