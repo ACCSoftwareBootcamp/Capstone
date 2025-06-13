@@ -17,34 +17,49 @@ $("document").ready(() => {
   $("#playerBanner").text(`Player ${player}'s turn`);
 
   // function that fires when a cookie is clicked inside it's jar to make it show selected
+  //did conditional so if no cookies are selected anymore-selectedX is false so any jar can be be pulled from
+  let resetJarSelect=()=>{
+    if (!$(".cookie").hasClass("selected")) {
+      selected1=false
+      selected2=false
+      selected3=false
+    }}
+
   $("#jar1").on("click", "p", function () {
     if (!selected2 && !selected3){
       selected1=true
-      $(this).toggleClass("selected")}
+      $(this).toggleClass("selected")
+      resetJarSelect()
+    }
   });
 
   $("#jar2").on("click", "p", function () {
     if (!selected1 && !selected3){
       selected2=true
-      $(this).toggleClass("selected")};
+      $(this).toggleClass("selected")}
+      resetJarSelect();
   });
 
   $("#jar3").on("click", "p", function () {
     if (!selected2 && !selected1){
       selected3=true
-      $(this).toggleClass("selected")};
+      $(this).toggleClass("selected")
+    resetJarSelect()
+  };
   });
 
-  //done button--turn over, hide cookies, change player, check if game over
+  //Steal button
+  // --turn over, hide cookies, change player, check if game over
   $("button").on("click", function () {
     // wrapping all in a conditional that ensures at least 1 cookie is selected
-    if (selected1 || selected2 ||selected3){
+    if ($(".cookie").hasClass("selected")){
     //hides cookies and removes selected class from cookies
     $(".selected").addClass("hidden");
     $(".selected").removeClass("selected");
     //changes active player and banner
     player == 1 ? player++ : player--;
     $("#playerBanner").text(`Player ${player}`);
+    $(".wrapper").toggleClass("wrapper2")
 
     // resets jar selected so all are choosable
     selected1=false
@@ -85,7 +100,7 @@ $("document").ready(() => {
     }
     isGameOver();
     }
-    else alert(`Player ${player} must select at least one cookie!`)
+    else alert(`Player ${player} can't resist, they must steal at least one cookie...`)
   });
 
   // what to do when game is over
@@ -96,7 +111,7 @@ $("document").ready(() => {
       player == 1 ? player++ : player--;
       $("#playerBanner").toggleClass("hidden");
       $("#finished").text(
-        `Player ${player} is the loser that took the last one`
+        `Player ${player} was caught...what a loser!`
       );
       $("#finished").toggleClass("hidden");
     }

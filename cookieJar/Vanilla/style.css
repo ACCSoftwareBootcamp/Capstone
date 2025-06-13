@@ -1,4 +1,11 @@
+.wrapper {
+  border: 4px solid brown;
+  background: palegoldenrod;
+}
 
+.wrapper2 {
+  border: 4.5px solid black;
+}
 
 .delius-swash-caps-regular {
   font-family: "Delius Swash Caps", cursive;
