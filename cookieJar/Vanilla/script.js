@@ -111,7 +111,7 @@ $("document").ready(() => {
       player == 1 ? player++ : player--;
       $("#playerBanner").toggleClass("hidden");
       $("#finished").text(
-        `Player ${player} was caught...what a loser!`
+        `Player ${player} was caught...at least you got cookies!`
       );
       $("#finished").toggleClass("hidden");
     }
