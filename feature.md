@@ -1,4 +1,4 @@
 Claudio "Meanie"
 Nebiyu
-John was first 
+John was not first 
 Austin
