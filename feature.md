@@ -1,4 +1,4 @@
 Claudio "Meanie"
 Nebiyu
-John 
+John - aka jsmeazzy
 Austin
