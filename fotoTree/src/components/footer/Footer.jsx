@@ -1,29 +1,27 @@
-import './Footer.css'
+import "./Footer.css";
 
 const Footer = () => {
   return (
     <>
-    <hr />
+      <hr />
 
-    <br />
+      <br />
 
-    <div className='container'>
-     <div>Home</div>
-     <div>My Tree</div>
-     <div>Friends</div>
-     <div>Photo Viewer</div>
-     <div>Settings</div>   
-    </div>
+      <div className="container">
+        <div>Home</div>
+        <div>My Tree</div>
+        <div>Friends</div>
+        <div>Photo Viewer</div>
+        <div>Settings</div>
+      </div>
 
-    <br />
+      <br />
 
-    <div>
-        <p>
-            All rights reserved by FotoTree 2025 incorporated 
-        </p>
-    </div>
+      <div>
+        <p>All rights reserved by FotoTree 2025 incorporated</p>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

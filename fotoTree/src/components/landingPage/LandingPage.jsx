@@ -3,6 +3,7 @@ import Title from './Title';
 import landingPageImg from '../../assets/landingPage.png'
 
 const LandingPage = () => {
+  // bring in title component and site-img as the Landing Page component
   return (
     <>
       <Title />
