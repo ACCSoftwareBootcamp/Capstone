@@ -22,7 +22,7 @@ const connObj = {
 //connect to db using these properties - actually connect to mongo
 mongoose.connect(URL, connObj) 
     .then(function(){
-        console.log('connected to MongoDB')
+        console.log(`connected to MongoDB: ${MONGO_DB}`)
     })
     .catch(function(error){
         console.log('MongoDB connection failed', error)
