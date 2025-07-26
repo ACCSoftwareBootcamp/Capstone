@@ -1,0 +1,17 @@
+.form-group {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: .25rem;
+}
+
+input, select, textarea {
+    padding: .5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: .5rem;
+}

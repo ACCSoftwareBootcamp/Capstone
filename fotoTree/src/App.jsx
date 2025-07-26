@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './App.css'
 import LandingPage from './components/landingPage/LandingPage'
 import Footer from './components/footer/Footer'
+import CreatePerson from './components/addPersonForm/createPerson'
 
 function App() {
 
@@ -9,9 +10,11 @@ function App() {
   return (
     <>
 
-      <LandingPage />
 
-      <Footer />
+    <CreatePerson/>
+
+     {/* <LandingPage />
+      <Footer /> */}
 
     </>
   )
