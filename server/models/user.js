@@ -12,14 +12,14 @@ const userSchema = new Schema({
   },
   personId: {
     type: Schema.Types.ObjectId,
-    ref: 'Person'
+    ref: 'person'
   },
   trees: [{
     type: Schema.Types.ObjectId,
-    ref: 'Tree'
+    ref: 'tree'
   }]
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('user', userSchema);

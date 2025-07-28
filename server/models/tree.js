@@ -11,7 +11,7 @@ const treeSchema = new Schema({
   },
   owner: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true
   },
   createdDate: {
@@ -23,4 +23,4 @@ const treeSchema = new Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('Tree', treeSchema);
+module.exports = mongoose.model('tree', treeSchema);

@@ -39,12 +39,49 @@ require('./connections/mongoConnection')
 //establish root route
 app.get('/', (req, res) => {
     res.send('Root Route')
+});
+
+//Create--need routes for user, tree, branch
+// POST for person
+app.post('/person', function(req, res) {
+
+    const { treeId, firstName,lastName  } = req.body; 
+    console.log(req.body); 
+
+    tree.create ({
+        treeId, firstName, lastName
+    })
+    .then  (function (data) {
+        res.json(data)
+    })
+    .catch(function (error) {
+        console.log('Error posting to Mongo person', error)
+        res.status(400).json({ message: 'Error posting to Mongo person' })
+    })
+
+});
+
+//POST for user 
+app.post('/user', function(req, res) {
+
+    const { clerkId } = req.body; 
+    console.log(req.body); 
+
+    tree.create ({
+        clerkId
+    })
+    .then  (function (data) {
+        res.json(data)
+    })
+    .catch(function (error) {
+        console.log('Error posting to Mongo - user', error)
+        res.status(400).json({ message: 'Error posting to Mongo - user' })
+    })
+
 })
 
 
-
-//Create--need routes for user, tree, branch
-//POST for tree 
+// POST for tree
 app.post('/tree', function(req, res) {
 
     const { name, owner, description } = req.body; 
@@ -57,8 +94,8 @@ app.post('/tree', function(req, res) {
         res.json(data)
     })
     .catch(function (error) {
-        console.log('Error posting to Mongo', error)
-        res.status(400).json({ message: 'Error posting to Mongo' })
+        console.log('Error posting to Mongo tree', error)
+        res.status(400).json({ message: 'Error posting to Mongo tree' })
     })
 
 })

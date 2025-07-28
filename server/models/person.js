@@ -7,7 +7,7 @@ require('../connections/mongoConnection');
 const personSchema = new Schema({
   treeId: {
     type: Schema.Types.ObjectId,
-    ref: 'Tree',
+    ref: 'tree',
     required: true
   },
   firstName: {
@@ -23,19 +23,19 @@ const personSchema = new Schema({
   },
   momId: {
     type: Schema.Types.ObjectId,
-    ref: 'Person'
+    ref: 'person'
   },
   dadId: {
     type: Schema.Types.ObjectId,
-    ref: 'Person'
+    ref: 'person'
   },
   partnerIds: [{
     type: Schema.Types.ObjectId,
-    ref: 'Person'
+    ref: 'person'
   }],
   childrenIds: [{
     type: Schema.Types.ObjectId,
-    ref: 'Person'
+    ref: 'person'
   }],
   biography: String,
   photoUrl: String
@@ -43,4 +43,4 @@ const personSchema = new Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('Person', personSchema);
+module.exports = mongoose.model('person', personSchema);
