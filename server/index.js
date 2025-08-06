@@ -32,23 +32,54 @@ app.use(express.urlencoded())
 // connect the db to backend server
 require('./connections/mongoConnection')
 
-//routes
-
-//Read
-
+//ROUTES
+// READ - GET routes for root, user, tree, branch
 //establish root route
 app.get('/', (req, res) => {
     res.send('Root Route')
 });
+//READ - GET for person
+app.get('/person', function(req, res) {
+    person.find({})
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error getting from Mongo person', error)
+        res.status(400).json({ message: 'Error getting from Mongo person' })
+    })
+});
+//READ - GET for user
+app.get('/user', function(req, res) {
+    user.find({})
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error getting from Mongo user', error)
+        res.status(400).json({ message: 'Error getting from Mongo user' })
+    })
+});
+//READ - GET for tree
+app.get('/tree', function(req, res) {
+    tree.find({})
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error getting from Mongo tree', error)
+        res.status(400).json({ message: 'Error getting from Mongo tree' })
+    })
+}); 
 
-//Create--need routes for user, tree, branch
-// POST for person
+
+//CREATE - POST routes for user, tree, branch
+// CREATE - POST for person
 app.post('/person', function(req, res) {
 
     const { treeId, firstName,lastName  } = req.body; 
-    console.log(req.body); 
 
-    tree.create ({
+    person.create ({
         treeId, firstName, lastName
     })
     .then  (function (data) {
@@ -61,14 +92,13 @@ app.post('/person', function(req, res) {
 
 });
 
-//POST for user 
+//CREATE - POST for user 
 app.post('/user', function(req, res) {
 
-    const { clerkId } = req.body; 
-    console.log(req.body); 
+    const { clerkId, personId, trees } = req.body; 
 
-    tree.create ({
-        clerkId
+    user.create ({
+        clerkId, personId: null, trees: []
     })
     .then  (function (data) {
         res.json(data)
@@ -81,11 +111,10 @@ app.post('/user', function(req, res) {
 })
 
 
-// POST for tree
+// CREATE POST for tree
 app.post('/tree', function(req, res) {
 
     const { name, owner, description } = req.body; 
-    console.log(req.body); 
 
     tree.create ({
         name, owner, description
@@ -101,9 +130,95 @@ app.post('/tree', function(req, res) {
 })
 
 
-//Update-need routes for user, tree, branch
+//UPDATE - PUT routes for user, tree, branch
+// UPDATE - PUT for person
+app.put('/person/:id', function(req, res) {
+    const { id } = req.params;
+    const { treeId, firstName, lastName } = req.body; 
 
-//Delete-need routes for user, tree, branch
+    person.findByIdAndUpdate(id, {
+        treeId, firstName, lastName
+    }, { new: true })
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error updating Mongo person', error)
+        res.status(400).json({ message: 'Error updating Mongo person' })
+    })
+});
+// UPDATE - PUT for user
+app.put('/user/:id', function(req, res) {
+    const { id } = req.params;
+    const { clerkId, personId, trees } = req.body; 
+
+    user.findByIdAndUpdate(id, {
+        clerkId, personId, trees
+    }, { new: true })
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error updating Mongo user', error)
+        res.status(400).json({ message: 'Error updating Mongo user' })
+    })
+});
+// UPDATE - PUT for tree
+app.put('/tree/:id', function(req, res) {
+    const { id } = req.params;
+    const { name, owner, description } = req.body;
+    tree.findByIdAndUpdate(id, {
+        name, owner, description
+    }, { new: true })
+    .then(function(data) {
+        res.json(data)
+    }) 
+    .catch(function(error) {
+        console.log('Error updating Mongo tree', error)
+        res.status(400).json({ message: 'Error updating Mongo tree' })
+    })
+});
+
+//DELETE - DELETE routes for user, tree, branch
+// DELETE - DELETE for person
+app.delete('/person/:id', function(req, res) {
+    const { id } = req.params;
+
+    person.findByIdAndDelete(id)
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error deleting from Mongo person', error)
+        res.status(400).json({ message: 'Error deleting from Mongo person' })
+    })
+});
+// DELETE - DELETE for user
+app.delete('/user/:id', function(req, res) {
+    const { id } = req.params;
+
+    user.findByIdAndDelete(id)
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error deleting from Mongo user', error)
+        res.status(400).json({ message: 'Error deleting from Mongo user' })
+    })
+});
+// DELETE - DELETE for tree
+app.delete('/tree/:id', function(req, res) {
+    const { id } = req.params;
+
+    tree.findByIdAndDelete(id)
+    .then(function(data) {
+        res.json(data)
+    })
+    .catch(function(error) {
+        console.log('Error deleting from Mongo tree', error)
+        res.status(400).json({ message: 'Error deleting from Mongo tree' })
+    })
+});
 
 //listen
 app.listen(PORT, ()=> console.log(`FotoTree App is listening on PORT: ${PORT} `))

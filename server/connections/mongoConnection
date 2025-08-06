@@ -1,6 +1,5 @@
 // imports dotenv and runs it, reading the .env file
 require('dotenv').config()
-
 // import mongoose
 const mongoose = require('mongoose')
 

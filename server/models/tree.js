@@ -23,4 +23,6 @@ const treeSchema = new Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('tree', treeSchema);
+const TreeModel = mongoose.model('tree', treeSchema);
+
+module.exports = TreeModel;
