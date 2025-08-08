@@ -1,6 +1,9 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
-import LandingPage from "./components/landingPage/LandingPage";
+//import routes
+import LandingPage from "./routes/LandingPage";
+import Tree from "./routes/Tree"
+import PersonFormPlaceholder from './routes/PersonFormPlaceholder'
 
 //import clerk components to customize signed in vs signed out view
 import {
@@ -19,6 +22,9 @@ function App() {
       <Router>
         <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/tree" element= {< Tree />} />
+        <Route path="/person" element= {< PersonFormPlaceholder />} />
+
         </Routes>
       </Router>
     </>
