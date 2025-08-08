@@ -61,6 +61,8 @@ useEffect(() => {
            <Link to="/tree" className="btn btn-success">
                     See my FotoTree!
                   </Link>
+
+                  <Footer />
         </div>
        
       </SignedIn>
