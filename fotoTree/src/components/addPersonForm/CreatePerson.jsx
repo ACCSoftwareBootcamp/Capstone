@@ -1,23 +1,57 @@
 import React, { useState } from "react";
 import "./CreatePerson.css";
+import { use } from "react";
 
 const CreatePerson = () => {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    birthDate: "",
-    deathDate: "",
-    gender: "",
-    momId: "",
-    dadId: "",
-    partnerId: "",
-    childId: "",
-    bio: "",
-  });
+  const [formData, setFormData] = useState([
+    // Initial state for form data    
+    {
+      firstName: "",
+      lastName: "",
+      birthDate: "",
+      deathDate: "",
+      gender: "",
+      momId: "",
+      dadId: "",
+      partnerId: "",
+      childId: "",
+      bio: "", 
+    },
+  ]);
+
+  //State to keep track of what the user is inputting to add new person
+  const [newFormData, setNewFormData] = useState("");
+
+  const handleChange = (event) => {
+    setNewFormData(event.target.value);
+  };
+
+  const handleAddData = (e) => {
+    e.preventDefault();
+
+    if (newFormData.trim() !== "") {
+      let obj = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        birthDate: formData.birthDate,
+        deathDate: formData.deathDate,
+        gender: formData.gender,
+        momId: formData.momId,
+        dadId: formData.dadId,
+        partnerId: formData.partnerId,
+        childId: formData.childId,
+        bio: formData.bio,
+      };
+
+      setFormData([...formData, obj]);
+    }
+
+   
+  };
 
   return (
     <>
-      <form>
+      <form onSubmit={(e) => handleAddData(e)}>
         <div className="form-group">
           <label htmlFor="firstName"> First Name </label>
           <input id="firstName" name="firstName" />
@@ -89,13 +123,20 @@ const CreatePerson = () => {
         </div>
 
         <div className="form-group">
-          <button type="submit"> Add Person </button>
+          <button type="submit" onChange={handleChange}>
+            {" "}
+            Add Person{" "}
+          </button>
         </div>
 
         <div className="form-group"></div>
+        
       </form>
+
+      
     </>
   );
+  console.log(obj)
 };
 
 export default CreatePerson;

@@ -7,6 +7,8 @@ import CreatePerson from './components/addPersonForm/createPerson'
 function App() {
 
 
+  
+
   return (
     <>
 
@@ -21,3 +23,5 @@ function App() {
 }
 
 export default App
+
+console.log(CreatePerson)
