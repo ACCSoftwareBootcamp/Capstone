@@ -3,7 +3,7 @@ import "./App.css";
 //import routes
 import LandingPage from "./routes/LandingPage";
 import Tree from "./routes/Tree"
-import PersonFormPlaceholder from './routes/PersonFormPlaceholder'
+import CreatePerson from "./routes/CreatePerson"; 
 
 //import clerk components to customize signed in vs signed out view
 import {
@@ -23,7 +23,7 @@ function App() {
         <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/tree" element= {< Tree />} />
-        <Route path="/person" element= {< PersonFormPlaceholder />} />
+        <Route path="/person" element= {< CreatePerson />} />
 
         </Routes>
       </Router>
