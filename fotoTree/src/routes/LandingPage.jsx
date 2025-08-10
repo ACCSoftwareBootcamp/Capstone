@@ -12,7 +12,6 @@ import { useState, useEffect} from "react";
 const LandingPage = () => {
 //unpack clerk useUser object to personalize any info needed on our landing page once signedIn
 const { user, isLoaded} = useUser()
-console.log(user)
 
 //set first name variable from clerk let's await the info
 const [ firstName, setFirstName] = useState('')
@@ -21,6 +20,7 @@ const [ firstName, setFirstName] = useState('')
 //save a firstName for personalization--don't include it if info isn't loaded from clerk yet
 useEffect(() => {
   if (isLoaded && user) {
+    //see if they are already a user in our d
     setFirstName(user.firstName || '');
   }
 }, [user, isLoaded]);
