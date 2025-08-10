@@ -31,6 +31,7 @@ useEffect(() => {
 
         if (data.message === "User not found") {
           // 2. If not found, create one
+          console.log("Creating new user in Database")
           const createRes = await fetch(`http://localhost:3000/user`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
