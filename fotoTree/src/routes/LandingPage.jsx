@@ -16,16 +16,44 @@ const { user, isLoaded} = useUser()
 //set first name variable from clerk let's await the info
 const [ firstName, setFirstName] = useState('')
 
+//initialize variable of mongo user id--needed to see if they are already a fotoTree user to create/load their tree
+const [ mongoUserId, setMongoUserId] = useState('')
 
-//save a firstName for personalization--don't include it if info isn't loaded from clerk yet
+//when clerk user is loaded, load their mongo user id to use for tree reference and person creation
 useEffect(() => {
   if (isLoaded && user) {
-    //see if they are already a user in our database if not create the user 
-  
-  //setting first name for personalization on this page
-    setFirstName(user.firstName || '');
+    const getOrCreateMongoUser = async () => {
+      try {
+        // 1. Try to find existing user
+        const res = await fetch(`http://localhost:3000/user/${user.id}`);
+        const data = await res.json();
+        console.log(data)
+
+        if (data.message === "User not found") {
+          // 2. If not found, create one
+          const createRes = await fetch(`http://localhost:3000/user`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clerkId: user.id }),
+          });
+          const createdUser = await createRes.json();
+          setMongoUserId(createdUser._id);
+        } else {
+          // Found existing
+          setMongoUserId(data._id);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      // 3. Always set first name for personalization
+      setFirstName(user.firstName || "");
+    };
+
+    getOrCreateMongoUser();
   }
-}, [user, isLoaded]);
+}, [isLoaded, user]);
+
 
 
 
