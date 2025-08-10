@@ -20,7 +20,9 @@ const [ firstName, setFirstName] = useState('')
 //save a firstName for personalization--don't include it if info isn't loaded from clerk yet
 useEffect(() => {
   if (isLoaded && user) {
-    //see if they are already a user in our d
+    //see if they are already a user in our database if not create the user 
+  
+  //setting first name for personalization on this page
     setFirstName(user.firstName || '');
   }
 }, [user, isLoaded]);
