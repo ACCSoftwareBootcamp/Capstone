@@ -9,20 +9,47 @@ import {useUser} from "@clerk/clerk-react"
 const CreatePerson = () => {
 
   
-//clerk id to use as treeId for submission and relating the person to a particular tree
+//clerk id to get treeId for submission and relating the person to a particular tree
 const {user, isLoaded} = useUser()
 
 const [treeId, setTreeId] = useState('')
 
-//if user is loaded set tree id with clerk user info 
+//when clerk user is loaded, load their mongo user id to use for tree reference and person creation
 useEffect(() => {
   if (isLoaded && user) {
-    //using the last 24 characters of 32 char string to comply with mongo formatting
-    //todo consider creating our own user id's to ensure 0 chance of conflict
-    setTreeId(user.id)
-    console.log("clerk user", user)
+    const getOrCreateMongoUser = async () => {
+      try {
+        // 1. Try to find existing user
+        const res = await fetch(`http://localhost:3000/user/${user.id}`);
+        const data = await res.json();
+        console.log(data)
+
+         // 2a1. If not found, create one
+        if (data.message === "User not found") {
+          console.log("Creating new user in Database")
+          const createUserRes = await fetch(`http://localhost:3000/user`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clerkId: user.id }),
+          });
+          const createdUser = await createUserRes.json();
+          setTreeId(createdUser._id);
+        } else {
+          //2b. Found existing id so set that
+          setTreeId(data._id);
+        }
+      } catch (err) {
+        console.error("error getting or creating DB user", err);
+      }
+
+    };
+    //3. actually run the get or create function her so TreeId is set
+    getOrCreateMongoUser();
+   
   }
-}, [user, isLoaded]);
+}, [isLoaded, user]);
+
+
 
 //initialize th formData with empty values
 //todo server only accepts treeId, firstName, lastName right now
@@ -54,6 +81,12 @@ useEffect(() => {
   //has a fetch so async function with try/catch block
  const handleAddData = async (e) => {
   e.preventDefault();
+
+  //if tree id isn't set yet, exit the function until it resolves
+ if (!treeId) {
+    console.error("Tree ID not ready yet");
+    return;
+  }
 
   // Build object to send...
   const personObj = {

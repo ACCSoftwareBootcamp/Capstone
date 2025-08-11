@@ -50,10 +50,15 @@ app.get('/person', function(req, res) {
     })
 });
 //READ - GET for user
-app.get('/user', function(req, res) {
-    user.find({})
+//made server accept clerk id to return our id using url params
+app.get('/user/:clerkId', function(req, res) {
+    const { clerkId } = req.params
+    user.findOne({clerkId})
     .then(function(data) {
-        res.json(data)
+     if (!data) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+            res.json(data);
     })
     .catch(function(error) {
         console.log('Error getting from Mongo user', error)
@@ -61,8 +66,8 @@ app.get('/user', function(req, res) {
     })
 });
 //READ - GET for tree
-app.get('/tree', function(req, res) {
-    tree.find({})
+app.get('/tree/:_id', function(req, res) {
+    tree.findOne({_id})
     .then(function(data) {
         res.json(data)
     })
@@ -95,13 +100,14 @@ app.post('/person', function(req, res) {
 //CREATE - POST for user 
 app.post('/user', function(req, res) {
 
-    const { clerkId, personId, trees } = req.body; 
+    const { clerkId } = req.body; 
 
     user.create ({
-        clerkId, personId: null, trees: []
+        clerkId
     })
     .then  (function (data) {
         res.json(data)
+        console.log("New User Created", data)
     })
     .catch(function (error) {
         console.log('Error posting to Mongo - user', error)
@@ -114,7 +120,7 @@ app.post('/user', function(req, res) {
 // CREATE POST for tree
 app.post('/tree', function(req, res) {
 
-    const { name, owner, description } = req.body; 
+    const {  name, owner, description } = req.body; 
 
     tree.create ({
         name, owner, description
