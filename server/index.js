@@ -66,8 +66,9 @@ app.get('/user/:clerkId', function(req, res) {
     })
 });
 //READ - GET for tree
-app.get('/tree/:_id', function(req, res) {
-    tree.findOne({_id})
+app.get('/tree/:owner', function(req, res) {
+    const {owner}=req.params
+    tree.findOne({owner})
     .then(function(data) {
         res.json(data)
     })

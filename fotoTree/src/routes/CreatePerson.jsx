@@ -4,6 +4,7 @@ import Header from "../components/header/Header";
 import Footer from '../components/footer/Footer';
 import {useUser} from "@clerk/clerk-react"
 
+//when we go to create person we need to poll the db for the users tree and save it a variable to use in each person object
 
 
 const CreatePerson = () => {
@@ -13,41 +14,40 @@ const CreatePerson = () => {
 const {user, isLoaded} = useUser()
 
 const [treeId, setTreeId] = useState('')
+const [mongoUser, setMongoUser] = useState('')
 
 //when clerk user is loaded, load their mongo user id to use for tree reference and person creation
 useEffect(() => {
   if (isLoaded && user) {
-    const getOrCreateMongoUser = async () => {
+    const fetchUserAndTree = async () => {
       try {
-        // 1. Try to find existing user
-        const res = await fetch(`http://localhost:3000/user/${user.id}`);
-        const data = await res.json();
-        console.log(data)
+        // 1. Find existing user
+        const userRes = await fetch(`http://localhost:3000/user/${user.id}`);
+        if (!userRes.ok) throw new Error("Failed to fetch user");
+        const userData = await userRes.json();
+        console.log("existing user data", userData);
+        // 2. set mongoUser to find tree and use in person creation
+        setMongoUser(userData._id);
 
-         // 2a1. If not found, create one
-        if (data.message === "User not found") {
-          console.log("Creating new user in Database")
-          const createUserRes = await fetch(`http://localhost:3000/user`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ clerkId: user.id }),
-          });
-          const createdUser = await createUserRes.json();
-          setTreeId(createdUser._id);
-        } else {
-          //2b. Found existing id so set that
-          setTreeId(data._id);
-        }
+        // 3. Use mongo user ID to find tree
+        const treeRes = await fetch(`http://localhost:3000/tree/${userData._id}`);
+        if (!treeRes.ok) throw new Error("Failed to fetch tree");
+        const treeData = await treeRes.json();
+        console.log("tree data", treeData);
+         // 4. set tree id so created object can be related. 
+        setTreeId(treeData._id);
       } catch (err) {
-        console.error("error getting or creating DB user", err);
+        console.error("Error getting user or tree from database", err);
       }
+       
+        
 
     };
-    //3. actually run the get or create function her so TreeId is set
-    getOrCreateMongoUser();
-   
+      //call the function!
+    fetchUserAndTree();
   }
 }, [isLoaded, user]);
+
 
 
 
@@ -93,10 +93,11 @@ useEffect(() => {
     treeId,
     firstName: formData.firstName,
     lastName: formData.lastName,
+    creator: mongoUser
   };
 
   console.log("Saving person:", personObj);
-
+//send it to server as a POST
   try {
     const res = await fetch("http://localhost:3000/person", {
       method: "POST",
@@ -109,7 +110,7 @@ useEffect(() => {
     const createdResponse = await res.json();
     console.log("Person created:", createdResponse);
 
-    // Clear just the form fields, without resetting the treeId from useEffect
+    // Clear just the form fields, without resetting the treeId from useEffect so another can be created
     setFormData({
       firstName: "",
       lastName: "",
