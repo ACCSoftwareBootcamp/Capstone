@@ -3,16 +3,11 @@ import "./App.css";
 //import routes
 import LandingPage from "./routes/LandingPage";
 import Tree from "./routes/Tree"
-<<<<<<< Updated upstream
 import CreatePerson from "./routes/CreatePerson"; 
-=======
-import PersonFormPlaceholder from './routes/PersonFormPlaceholder'
-import PersonCard from "./routes/PersonCard";
-import Friends from "./components/Friends/Friends";
+//import Friends from "./components/Friends/Friends";
 
 
 
->>>>>>> Stashed changes
 
 //import clerk components to customize signed in vs signed out view
 import {
@@ -28,20 +23,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 function App() {
   return (
     <>
-<<<<<<< Updated upstream
-      <Router>
+ <Router>
         <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/tree" element= {< Tree />} />
         <Route path="/person" element= {< CreatePerson />} />
-=======
-<Router>
-  <Routes>
-    <Route path="/" element={<LandingPage />} />
-    <Route path="/tree" element={<Tree />} />
-    <Route path="/person" element={<PersonCard />} />
-    <Route path="/friends" element={<Friends />} />
->>>>>>> Stashed changes
+       {/* <Route path="/friends" element={<Friends />} />*/}
 
   </Routes>
 </Router>
