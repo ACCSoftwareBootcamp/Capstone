@@ -30,7 +30,7 @@ app.use(express.urlencoded())
 
 
 // connect the db to backend server
-require('./connections/mongoConnection')
+require('./connections/mongoConnection.js')
 
 //ROUTES
 // READ - GET routes for root, user, tree, branch

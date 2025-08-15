@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-require('../connections/mongoConnection');
+require('../connections/mongoConnection.js');
 
 const userSchema = new Schema({
   clerkId: {
