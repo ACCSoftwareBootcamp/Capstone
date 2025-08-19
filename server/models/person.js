@@ -14,9 +14,15 @@ const personSchema = new Schema({
     type: String,
     required: true
   },
-  lastName: String,
-  birthDate: Date,
-  deathDate: Date,
+  lastName: {
+    type: String
+    },
+  birthDate: {
+    type: Date 
+  } ,
+  deathDate: {
+  type: Date
+},
   gender: {
     type: String,
     enum: ['male', 'female', 'other']
@@ -29,11 +35,11 @@ const personSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'person'
   },
-  partnerIds: [{
+  partnerId: [{
     type: Schema.Types.ObjectId,
     ref: 'person'
   }],
-  childrenIds: [{
+  childId: [{
     type: Schema.Types.ObjectId,
     ref: 'person'
   }],
