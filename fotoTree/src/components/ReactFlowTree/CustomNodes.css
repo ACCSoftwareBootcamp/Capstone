@@ -1,0 +1,23 @@
+.custom-node {
+  background: #fff;
+  border: 1px solid #888;
+  border-radius: 6px;
+  padding: 12px;
+  min-width: 100px;
+  text-align: center;
+  position: relative; /* Important */
+}
+
+.custom-node-label {
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.node-input {
+  width: 100%;
+  font-size: 14px;
+  padding: 4px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+}
