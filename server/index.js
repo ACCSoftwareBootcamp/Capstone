@@ -173,7 +173,7 @@ app.put('/user/:id', function(req, res) {
 // UPDATE - PUT for tree
 app.put('/tree/:id', function(req, res) {
     const { id } = req.params;
-    const { name, owner, description } = req.body;
+    const { name, owner, description, nodes, edges } = req.body;
     tree.findByIdAndUpdate(id, {
         name, owner, description
     }, { new: true })
