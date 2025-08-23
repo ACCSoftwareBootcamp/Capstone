@@ -127,56 +127,69 @@ const Flow = ({ initialNodes, initialEdges }) => {
 
   // connect existing nodes
   const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
+    (params) => {
+      if (!reactFlowWrapper.current) {
+        console.error("reactFlowWrapper ref is not attached!");
+        return;
+      }
+      setEdges((eds) => addEdge(params, eds));
+    },
     [setEdges]
   );
 
   // connect + create new node
-  const onConnectEnd = useCallback(
-    (event) => {
-      const sourceHandle = connectingHandleId.current;
-      const sourceNodeId = connectingNodeId.current;
+// connect + create new node
+const onConnectEnd = useCallback(
+  (event) => {
+    const sourceHandle = connectingHandleId.current;
+    const sourceNodeId = connectingNodeId.current;
 
-      if (!sourceHandle || !sourceNodeId) return;
+    if (!sourceHandle || !sourceNodeId) return;
 
-      const newNodeId = getId();
-      const { clientX, clientY } =
-        "changedTouches" in event ? event.changedTouches[0] : event;
+    const newNodeId = getId();
+    const { clientX, clientY } =
+      "changedTouches" in event ? event.changedTouches[0] : event;
 
-      const position = screenToFlowPosition({
-        x: clientX,
-        y: clientY,
-      });
+    // ✅ FIX: use clientX/clientY directly (no subtracting bounds)
+    let position = screenToFlowPosition({ x: clientX, y: clientY });
 
-      const targetHandle = getOppositeHandle(sourceHandle);
+    // ✅ Optional: snap to grid (20px here)
+    const snap = (val, gridSize = 20) => Math.round(val / gridSize) * gridSize;
+    position = {
+      x: snap(position.x),
+      y: snap(position.y),
+    };
 
-      const newNode = {
-        id: newNodeId,
-        position,
-        data: { label: `Node ${newNodeId}`, onChange: onLabelChange },
-        origin: [0.5, 0.0],
-        snapToGrid: true,
-        type: "custom",
-      };
+    const targetHandle = getOppositeHandle(sourceHandle);
 
-      setNodes((nds) => nds.concat(newNode));
+    const newNode = {
+      id: newNodeId,
+      position,
+      data: { label: `Node ${newNodeId}`, onChange: onLabelChange },
+      origin: [0.5, 0.0],
+      snapToGrid: true,
+      type: "custom",
+    };
 
-      setEdges((eds) =>
-        eds.concat({
-          id: `e${Date.now()}`,
-          source: sourceNodeId,
-          sourceHandle,
-          target: newNodeId,
-          targetHandle,
-          type: "straight",
-        })
-      );
+    setNodes((nds) => nds.concat(newNode));
 
-      connectingHandleId.current = null;
-      connectingNodeId.current = null;
-    },
-    [screenToFlowPosition, onLabelChange, setNodes, setEdges]
-  );
+    setEdges((eds) =>
+      eds.concat({
+        id: `e${Date.now()}`,
+        source: sourceNodeId,
+        sourceHandle,
+        target: newNodeId,
+        targetHandle,
+        type: "straight",
+      })
+    );
+
+    connectingHandleId.current = null;
+    connectingNodeId.current = null;
+  },
+  [screenToFlowPosition, onLabelChange, setNodes, setEdges]
+);
+
 
   // Save flow state with dummy POST request
   const saveFlow = useCallback(async () => {
@@ -226,7 +239,9 @@ const Flow = ({ initialNodes, initialEdges }) => {
       style={{
         width: "100vw",
         height: "100vh",
-        overflow: "visible", // make sure nodes aren't clipped
+        overflow: "visible",
+        position: "relative",
+        contain: "none",
       }}
     >
       <ReactFlow
@@ -238,13 +253,34 @@ const Flow = ({ initialNodes, initialEdges }) => {
         onConnectStart={onConnectStart}
         onConnect={onConnect}
         onConnectEnd={onConnectEnd}
-        fitView
-        nodeOrigin={nodeOrigin}
+        nodeOrigin={[0.5, 0.5]}
         snapToGrid={true}
         snapGrid={[20, 20]}
-        style={{ overflow: "visible" }} // crucial for custom nodes
->
-      
+        style={{ 
+          overflow: "visible",
+          position: "relative",
+          width: "100%",
+          height: "100%",
+        }}
+        fitView
+        fitViewOptions={{
+          padding: 50,
+          includeHiddenNodes: true,
+          minZoom: 1.5,
+          maxZoom: 3,
+        }}
+        defaultViewport={{ x: 0, y: 0, zoom: 1.5 }}
+        // Add these props to fix coordinate space
+        translateExtent={[[-2000, -2000], [2000, 2000]]}
+        nodeExtent={[[-2000, -2000], [2000, 2000]]}
+        panOnDrag={true}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        preventScrolling={false}
+        nodesDraggable={true}
+        nodesConnectable={true}
+        elementsSelectable={true}
+      >
         <Background />
         <MiniMap />
         <Controls />
@@ -253,7 +289,7 @@ const Flow = ({ initialNodes, initialEdges }) => {
             position: "absolute",
             right: 10,
             top: 10,
-            zIndex: 10,
+            zIndex: 1000,
           }}
         >
           <button onClick={saveFlow}>💾 Save</button>
@@ -265,9 +301,37 @@ const Flow = ({ initialNodes, initialEdges }) => {
 
 // --- Wrap Flow in ReactFlowProvider so context works ---
 const FlowTree = ({ nodes, edges }) => (
-  <ReactFlowProvider>
-    <Flow initialNodes={nodes} initialEdges={edges} />
-  </ReactFlowProvider>
+  <div 
+    className="flowtree-isolation-container"
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 999,
+      background: 'white',
+      overflow: 'visible',
+      contain: 'none',
+    }}
+  >
+    <div 
+      style={{
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        zIndex: 1001,
+        background: 'rgba(255,255,255,0.9)',
+        padding: '5px',
+        borderRadius: '4px',
+      }}
+    >
+      <button onClick={() => window.history.back()}>← Back</button>
+    </div>
+    <ReactFlowProvider>
+      <Flow initialNodes={nodes} initialEdges={edges} />
+    </ReactFlowProvider>
+  </div>
 );
 
 export default FlowTree;

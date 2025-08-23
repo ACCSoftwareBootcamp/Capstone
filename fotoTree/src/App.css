@@ -1,18 +1,55 @@
-* {
-  background-color: blanchedalmond;
-}
-
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  /* Remove max-width constraint that's causing clipping */
+  /* max-width: 1280px; */
+  margin: 0;
+  padding: 0;
   text-align: center;
 }
 
+/* Add specific rule for non-tree pages to maintain 1280px constraint */
+.page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
 
+/* Ensure tree pages can use full viewport */
+.tree-page {
+  max-width: none !important;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
+}
 
 .card {
   padding: 2em;
 }
 
+/* ReactFlow component z-index fixes */
+.react-flow__controls { 
+  z-index: 20; 
+}
 
+.react-flow__minimap { 
+  z-index: 20; 
+}
+
+/* Tree container fixes */
+.tree-container {
+  overflow: visible !important;
+  contain: none !important;
+  max-width: none !important; /* Override any inherited max-width */
+}
+
+.tree-container * {
+  box-sizing: border-box;
+}
+
+/* Override Bootstrap container constraints for tree pages */
+.tree-page .container,
+.tree-page .container-fluid {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}

@@ -1,4 +1,4 @@
-import "../components/landingPage/landingPage.css";
+// import "../components/landingPage/landingPage.css";
 import Title from "../components/landingPage/Title";
 import landingPageImg from "../assets/landingPage.png";
 import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
@@ -31,7 +31,7 @@ const LandingPage = () => {
           const res = await fetch(`http://localhost:3000/user/${user.id}`);
           const data = await res.json();
           console.log("User lookup:", data);
-            //this message is provided by the server if the user isn't in our database...so we create one if it's received. 
+          //this message is provided by the server if the user isn't in our database...so we create one if it's received.
           if (data.message === "User not found") {
             console.log("Creating new user in Database...");
             const createUserRes = await fetch(`http://localhost:3000/user`, {
@@ -61,7 +61,7 @@ const LandingPage = () => {
             const createdTree = await createTreeRes.json();
             console.log("Created tree:", createdTree);
           } else {
-            // Found existing Mongo user, let's use that info. 
+            // Found existing Mongo user, let's use that info.
             setMongoUserId(data._id);
           }
         } catch (err) {
@@ -74,7 +74,7 @@ const LandingPage = () => {
   }, [isLoaded, user]);
 
   return (
-    <>
+    <div className="page-container"> {/* Add page-container class for 1280px constraint */}
       {/* if signed out this all renders */}
       <SignedOut>
         <Header />
@@ -108,7 +108,7 @@ const LandingPage = () => {
           <Footer />
         </div>
       </SignedIn>
-    </>
+    </div>
   );
 };
 

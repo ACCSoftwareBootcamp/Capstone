@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
-import FlowTree  from "../components/ReactFlowTree/FlowTree";
+import FlowTree from "../components/ReactFlowTree/FlowTree";
 
 const MyTree = () => {
   const { user } = useUser();
@@ -17,7 +17,7 @@ const MyTree = () => {
       const res = await fetch(`http://localhost:3000/user/${user.id}`);
       const data = await res.json();
       setMongoId(data._id);
-console.log("Mongo user data:", data);
+      console.log("Mongo user data:", data);
 
       // we got the mongoId so now let's use it to load tree
       fetchTree(data._id);
@@ -26,14 +26,13 @@ console.log("Mongo user data:", data);
     // fetch tree data using mongoId
     const fetchTree = async (mongoId) => {
       try {
-         console.log("Fetching tree for Mongo ID:", mongoId);
+        console.log("Fetching tree for Mongo ID:", mongoId);
         const res = await fetch(`http://localhost:3000/tree/${mongoId}`);
         if (!res.ok) throw new Error("No tree found");
 
         const data = await res.json();
-         console.log("Tree data:", data);
-        setTreeData({nodes: data.nodes || [], edges: data.edges || []}); 
-        
+        console.log("Tree data:", data);
+        setTreeData({ nodes: data.nodes || [], edges: data.edges || [] });
       } catch (error) {
         console.log("No existing tree. Prompt to create one.");
         setTreeData(null);
@@ -46,29 +45,37 @@ console.log("Mongo user data:", data);
   }, [user]);
 
   return (
-    <>
-      <Header />
-      <br /><br />
-      <h1>My Tree</h1>
-
+    <div className="tree-page"> {/* Add tree-page class */}
       {loading ? (
-        <p>Loading your tree...</p>
-      ) : treeData ? (
-        <div style={{ width: "100%", height: "80vh" }}>
-          <FlowTree nodes={treeData.nodes} edges={treeData.edges} />
+        <div className="page-container"> {/* Use constrained container for loading */}
+          <Header />
+          <br />
+          <br />
+          <h1>My Tree</h1>
+          <p>Loading your tree...</p>
+          <Footer />
         </div>
+      ) : treeData ? (
+        /* Full viewport for tree display */
+        <FlowTree nodes={treeData.nodes} edges={treeData.edges} />
       ) : (
-        <div>
-          <p>You don't have a tree yet.</p>
-          <Link to="/person" className="btn btn-warning">
-            Create First Person
-          </Link>
+        <div className="page-container"> {/* Use constrained container for no-tree state */}
+          <Header />
+          <br />
+          <br />
+          <h1>My Tree</h1>
+          <div>
+            <p>You don't have a tree yet.</p>
+            <Link to="/person" className="btn btn-warning">
+              Create First Person
+            </Link>
+          </div>
+          <br />
+          <br />
+          <Footer />
         </div>
       )}
-
-      <br /><br />
-      <Footer />
-    </>
+    </div>
   );
 };
 

@@ -7,13 +7,16 @@ const CustomNode = ({ id, data, selected }) => {
   const [label, setLabel] = useState(data.label || '');
   const inputRef = useRef(null);
 
+  // Double-click enables editing
   const handleDoubleClick = () => setIsEditing(true);
+
+  // Blur disables editing and notifies parent
   const handleBlur = () => {
-  setIsEditing(false);
-  if (data.onChange) {
-    data.onChange(id, label); // Notify App.jsx of label change
-  }
-};
+    setIsEditing(false);
+    if (data.onChange) {
+      data.onChange(id, label);
+    }
+  };
 
   const handleChange = (e) => setLabel(e.target.value);
 
@@ -28,71 +31,25 @@ const CustomNode = ({ id, data, selected }) => {
       className={`custom-node ${selected ? 'selected' : ''}`}
       onDoubleClick={handleDoubleClick}
     >
-      {/* Top */}
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top"
-        style={{ top: -8, left: '50%', transform: 'translateX(-50%)' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top"
-        style={{ top: -8, left: '50%', transform: 'translateX(-50%)' }}
-      />
+      {/* Top handles */}
+      <Handle type="target" position={Position.Top} id="top" style={{ top: -8, left: '50%', transform: 'translateX(-50%)' }} />
+      <Handle type="source" position={Position.Top} id="top" style={{ top: -8, left: '50%', transform: 'translateX(-50%)' }} />
 
-      {/* Right */}
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="right"
-        style={{ right: -8, top: '50%', transform: 'translateY(-50%)' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right"
-        style={{ right: -8, top: '50%', transform: 'translateY(-50%)' }}
-      />
+      {/* Right handles */}
+      <Handle type="target" position={Position.Right} id="right" style={{ right: -8, top: '50%', transform: 'translateY(-50%)' }} />
+      <Handle type="source" position={Position.Right} id="right" style={{ right: -8, top: '50%', transform: 'translateY(-50%)' }} />
 
-      {/* Bottom */}
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id="bottom"
-        style={{ bottom: -8, left: '50%', transform: 'translateX(-50%)' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom"
-        style={{ bottom: -8, left: '50%', transform: 'translateX(-50%)' }}
-      />
+      {/* Bottom handles */}
+      <Handle type="target" position={Position.Bottom} id="bottom" style={{ bottom: -8, left: '50%', transform: 'translateX(-50%)' }} />
+      <Handle type="source" position={Position.Bottom} id="bottom" style={{ bottom: -8, left: '50%', transform: 'translateX(-50%)' }} />
 
-      {/* Left */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left"
-        style={{ left: -8, top: '50%', transform: 'translateY(-50%)' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="left"
-        style={{ left: -8, top: '50%', transform: 'translateY(-50%)' }}
-      />
+      {/* Left handles */}
+      <Handle type="target" position={Position.Left} id="left" style={{ left: -8, top: '50%', transform: 'translateY(-50%)' }} />
+      <Handle type="source" position={Position.Left} id="left" style={{ left: -8, top: '50%', transform: 'translateY(-50%)' }} />
 
-      {/* Editable Label */}
+      {/* Editable label */}
       {isEditing ? (
-        <input
-          ref={inputRef}
-          value={label}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className="node-input"
-        />
+        <input ref={inputRef} value={label} onChange={handleChange} onBlur={handleBlur} className="node-input" />
       ) : (
         <div className="custom-node-label">{label}</div>
       )}

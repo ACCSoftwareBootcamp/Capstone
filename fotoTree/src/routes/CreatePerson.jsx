@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import '../components/addPersonForm/CreatePerson.css';
+// import '../components/addPersonForm/CreatePerson.css';
 import Header from "../components/header/Header";
 import Footer from '../components/footer/Footer';
 import {useUser} from "@clerk/clerk-react"
