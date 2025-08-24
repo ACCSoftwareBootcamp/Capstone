@@ -45,9 +45,9 @@ const MyTree = () => {
   }, [user]);
 
   return (
-    <div className="tree-page"> {/* Add tree-page class */}
+    <div className="treePageWrapper"> {/* Add tree-page class */}
       {loading ? (
-        <div className="page-container"> {/* Use constrained container for loading */}
+        <div> {/* Use constrained container for loading */}
           <Header />
           <br />
           <br />
@@ -59,14 +59,14 @@ const MyTree = () => {
         /* Full viewport for tree display */
         <FlowTree nodes={treeData.nodes} edges={treeData.edges} />
       ) : (
-        <div className="page-container"> {/* Use constrained container for no-tree state */}
+        <div > 
           <Header />
           <br />
           <br />
           <h1>My Tree</h1>
           <div>
             <p>You don't have a tree yet.</p>
-            <Link to="/person" className="btn btn-warning">
+            <Link to="/person">
               Create First Person
             </Link>
           </div>

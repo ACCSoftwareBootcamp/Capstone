@@ -74,15 +74,15 @@ const LandingPage = () => {
   }, [isLoaded, user]);
 
   return (
-    <div className="page-container"> {/* Add page-container class for 1280px constraint */}
+    <div className="landingPage-container"> 
       {/* if signed out this all renders */}
       <SignedOut>
         <Header />
-        <div className="text-center mt-5">
+        <div>
           <Title />
           <h3>Every Family has a story to tell share yours on FotoTree</h3>
           <p>Please sign in to get started</p>
-          <SignInButton className="px-3 py-1 rounded-1 btn btn-primary" />
+          <SignInButton  />
           <br />
           <br />
           <div>
@@ -95,14 +95,14 @@ const LandingPage = () => {
       {/* if signed in this all renders */}
       <SignedIn afterSigninUrl="/">
         <Header />
-        <div className="text-center mt-5">
+        <div>
           <Title />
           <h3>
             The "F" is for <strong>Family</strong>
           </h3>
           <p>Hi, {firstName} let's check out your family tree!</p>
           <p>Click below to view your tree:</p>
-          <Link to="/tree" className="btn btn-success">
+          <Link to="/tree">
             See my FotoTree!
           </Link>
           <Footer />

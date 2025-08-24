@@ -5,7 +5,7 @@ html, body, #root {
   /* max-width: 1280px; */
   margin: 0;
   padding: 0;
-  text-align: center;
+  text-align: center
 }
 
 /* Add specific rule for non-tree pages to maintain 1280px constraint */
@@ -44,12 +44,4 @@ html, body, #root {
 
 .tree-container * {
   box-sizing: border-box;
-}
-
-/* Override Bootstrap container constraints for tree pages */
-.tree-page .container,
-.tree-page .container-fluid {
-  max-width: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
 }

@@ -3,7 +3,7 @@ const express = require('express')
 //create an instance of express
 const app = express()
 //establish port for listening
-const PORT=process.env.PORT || 3000
+const PORT=process.env.PORT || 5000
 //use a logger to track requests
 const logger= require('morgan')
 
