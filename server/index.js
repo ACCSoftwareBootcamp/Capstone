@@ -83,10 +83,10 @@ app.get('/tree/:owner', function(req, res) {
 // CREATE - POST for person
 app.post('/person', function(req, res) {
 
-    const { treeId, firstName,lastName  } = req.body; 
+    const { treeId, firstName,lastName, creator  } = req.body; 
 
     person.create ({
-        treeId, firstName, lastName
+        treeId, firstName, lastName, creator,
     })
     .then  (function (data) {
         res.json(data)

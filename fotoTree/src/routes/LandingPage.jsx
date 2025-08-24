@@ -105,6 +105,10 @@ const LandingPage = () => {
           <Link to="/tree">
             See my FotoTree!
           </Link>
+          <br />
+            <Link to="/person">
+            Add People to use in your tree!
+          </Link>
           <Footer />
         </div>
       </SignedIn>
