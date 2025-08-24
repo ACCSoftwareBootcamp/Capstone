@@ -24,22 +24,29 @@ const MyTree = () => {
     };
 
     // fetch tree data using mongoId
-    const fetchTree = async (mongoId) => {
-      try {
-        console.log("Fetching tree for Mongo ID:", mongoId);
-        const res = await fetch(`http://localhost:5000/tree/${mongoId}`);
-        if (!res.ok) throw new Error("No tree found");
+const fetchTree = async (mongoId) => {
+  try {
+    console.log("Fetching tree for Mongo ID:", mongoId);
+    const res = await fetch(`http://localhost:5000/tree/${mongoId}`);
+    if (!res.ok) throw new Error("No tree found");
 
-        const data = await res.json();
-        console.log("Tree data:", data);
-        setTreeData({ nodes: data.nodes || [], edges: data.edges || [] });
-      } catch (error) {
-        console.log("No existing tree. Prompt to create one.");
-        setTreeData(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const data = await res.json();
+    console.log("Tree data:", data);
+
+    // Make sure to pass the tree ID as part of the treeData object
+    setTreeData({
+      _id: data._id, // This ensures the tree ID is available to FlowTree
+      nodes: data.nodes || [],
+      edges: data.edges || [],
+    });
+  } catch (error) {
+    console.log("No existing tree. Prompt to create one.");
+    setTreeData(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     if (user?.id) fetchMongoUserId();
   }, [user]);
@@ -57,7 +64,7 @@ const MyTree = () => {
         </div>
       ) : treeData ? (
         /* Full viewport for tree display */
-        <FlowTree nodes={treeData.nodes} edges={treeData.edges} />
+        <FlowTree nodes={treeData.nodes} edges={treeData.edges} treeId={treeData._id}/>
       ) : (
         <div > 
           <Header />

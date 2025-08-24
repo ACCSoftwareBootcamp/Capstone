@@ -174,17 +174,28 @@ app.put('/user/:id', function(req, res) {
 app.put('/tree/:id', function(req, res) {
     const { id } = req.params;
     const { name, owner, description, nodes, edges } = req.body;
+
+    // Validate or process nodes and edges if necessary
+    if (!Array.isArray(nodes) || !Array.isArray(edges)) {
+        return res.status(400).json({ message: 'Invalid data format for nodes or edges' });
+    }
+
     tree.findByIdAndUpdate(id, {
-        name, owner, description
+        name,
+        owner,
+        description,
+        nodes,    
+        edges,   
     }, { new: true })
     .then(function(data) {
-        res.json(data)
-    }) 
-    .catch(function(error) {
-        console.log('Error updating Mongo tree', error)
-        res.status(400).json({ message: 'Error updating Mongo tree' })
+        res.json(data); // Send updated tree
     })
+    .catch(function(error) {
+        console.log('Error updating Mongo tree', error);
+        res.status(400).json({ message: 'Error updating Mongo tree' });
+    });
 });
+
 
 //DELETE - DELETE routes for user, tree, branch
 // DELETE - DELETE for person

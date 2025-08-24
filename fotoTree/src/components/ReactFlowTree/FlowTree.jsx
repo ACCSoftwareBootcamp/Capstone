@@ -58,7 +58,7 @@ const getId = () => `n${id++}`;
 const nodeOrigin = [0.5, 0];
 
 // --- Flow component (renders the graph) ---
-const Flow = ({ initialNodes, initialEdges }) => {
+const Flow = ({ initialNodes, initialEdges, treeId }) => {
   const reactFlowWrapper = useRef(null);
 
   // ✅ use DB nodes/edges if present, otherwise fallback to defaults
@@ -191,46 +191,61 @@ const onConnectEnd = useCallback(
 );
 
 
-  // Save flow state with dummy POST request
-  const saveFlow = useCallback(async () => {
-    const flowData = {
-      nodes: nodes.map(({ id, type, position, data }) => ({
-        id,
-        type,
-        position,
-        data: { label: data.label },
-      })),
-      edges: edges.map(
-        ({ id, source, target, sourceHandle, targetHandle, type }) => ({
-          id,
-          source,
-          target,
-          sourceHandle,
-          targetHandle,
-          type,
-        })
-      ),
-    };
+  // Save flow state with updated nodes/edges to backend
+const saveFlow = useCallback(async () => {
+  console.log("Tree ID:", treeId); // Debugging line
 
-    try {
-      const response = await fetch("/api/save", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(flowData),
-      });
+  // Check if treeId is available
+  if (!treeId) {
+    alert("Error: Tree ID is undefined.");
+    return; // Prevent the save operation if treeId is missing
+  }
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
-      }
+  const flowData = {
+    nodes: nodes.map(({ id, type, position, data }) => ({
+      id,
+      type,
+      position,
+      data: { label: data.label },
+    })),
+    edges: edges.map(({ id, source, target, sourceHandle, targetHandle, type }) => ({
+      id,
+      source,
+      target,
+      sourceHandle,
+      targetHandle,
+      type,
+    })),
+  };
 
-      alert("Flow saved successfully!");
-    } catch (error) {
-      console.error("Save failed:", error);
-      alert("Failed to save flow.");
+  //do the fetch to backend to save
+  try {
+    const response = await fetch(`http://localhost:5000/tree/${treeId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(flowData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.statusText}`);
     }
-  }, [nodes, edges]);
+
+    const updatedTree = await response.json(); // Get updated data
+    setNodes(updatedTree.nodes);  // Update state with the latest nodes
+    setEdges(updatedTree.edges);  // Update state with the latest edges
+
+    alert("Flow saved successfully!");
+  } catch (error) {
+    console.error("Save failed:", error);
+    alert("Failed to save flow.");
+  }
+}, [nodes, edges, treeId]);
+
+
+  const saveRef = useRef(saveFlow); //ref to hold save function
+  saveRef.current = saveFlow; // keep ref updated 
 
   return (
     <div
@@ -284,24 +299,42 @@ const onConnectEnd = useCallback(
         <Background />
         <MiniMap />
         <Controls />
-        <div
-          style={{
-            position: "absolute",
-            right: 10,
-            top: 10,
-            zIndex: 1000,
-          }}
-        >
-          <button onClick={saveFlow}>💾 Save</button>
-        </div>
+    <div 
+  style={{
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1001,
+    background: 'rgba(255,255,255,0.9)',
+    padding: '5px',
+    borderRadius: '4px',
+    display: 'flex',
+    gap: '10px', // 🔹 Space between buttons
+  }}
+>
+  <button onClick={() => saveRef.current?.()}>💾 Save</button>
+  <button onClick={() => window.history.back()}>← Back</button>
+</div>
       </ReactFlow>
     </div>
   );
 };
 
 // --- Wrap Flow in ReactFlowProvider so context works ---
-const FlowTree = ({ nodes, edges }) => (
+const FlowTree = ({ nodes, edges, treeId }) => {
+  
+  if (!treeId) {
+    console.error("Tree ID is missing or undefined.");
+    alert("Tree ID is missing! Unable to save flow.");
+    return null; // You could also return some fallback UI here
+  }
+
+  console.log("Tree ID in FlowTree:", treeId); 
+
+  
+  return (
   <div 
+  
     className="flowtree-isolation-container"
     style={{
       position: 'fixed',
@@ -329,9 +362,9 @@ const FlowTree = ({ nodes, edges }) => (
       <button onClick={() => window.history.back()}>← Back</button>
     </div>
     <ReactFlowProvider>
-      <Flow initialNodes={nodes} initialEdges={edges} />
+      <Flow initialNodes={nodes} initialEdges={edges} treeId={treeId} />
     </ReactFlowProvider>
   </div>
 );
-
+}
 export default FlowTree;
