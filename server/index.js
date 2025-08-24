@@ -3,7 +3,7 @@ const express = require('express')
 //create an instance of express
 const app = express()
 //establish port for listening
-const PORT=process.env.PORT || 3000
+const PORT=process.env.PORT || 5000
 //use a logger to track requests
 const logger= require('morgan')
 
@@ -17,7 +17,7 @@ const user = require('./models/user');
 const person = require('./models/person'); 
 
 // open up the CORS setting server so any browser client can access this
-app.use(cors())
+app.use(cors(  ))
 
 
 //middleware---for use between req and res cylces

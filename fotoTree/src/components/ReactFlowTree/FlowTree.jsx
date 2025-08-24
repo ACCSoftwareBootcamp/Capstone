@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import {
   ReactFlow,
   useNodesState,
@@ -12,7 +12,6 @@ import {
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-// import "./index.css";
 import CustomNode from "../ReactFlowTree/CustomNodes";
 
 // register custom node types
@@ -61,7 +60,7 @@ const nodeOrigin = [0.5, 0];
 const Flow = ({ initialNodes, initialEdges }) => {
   const reactFlowWrapper = useRef(null);
 
-  // ✅ use DB nodes/edges if present, otherwise fallback to defaults
+  // use DB nodes/edges if present, otherwise fallback to defaults
   const [nodes, setNodes, onNodesChange] = useNodesState(
     initialNodes?.length ? initialNodes : defaultNodes
   );
@@ -69,7 +68,7 @@ const Flow = ({ initialNodes, initialEdges }) => {
     initialEdges?.length ? initialEdges : defaultEdges
   );
 
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
 
   const connectingHandleId = useRef(null);
   const connectingNodeId = useRef(null);
@@ -138,58 +137,55 @@ const Flow = ({ initialNodes, initialEdges }) => {
   );
 
   // connect + create new node
-// connect + create new node
-const onConnectEnd = useCallback(
-  (event) => {
-    const sourceHandle = connectingHandleId.current;
-    const sourceNodeId = connectingNodeId.current;
+  const onConnectEnd = useCallback(
+    (event) => {
+      const sourceHandle = connectingHandleId.current;
+      const sourceNodeId = connectingNodeId.current;
 
-    if (!sourceHandle || !sourceNodeId) return;
+      if (!sourceHandle || !sourceNodeId) return;
 
-    const newNodeId = getId();
-    const { clientX, clientY } =
-      "changedTouches" in event ? event.changedTouches[0] : event;
+      const newNodeId = getId();
+      const { clientX, clientY } =
+        "changedTouches" in event ? event.changedTouches[0] : event;
 
-    // ✅ FIX: use clientX/clientY directly (no subtracting bounds)
-    let position = screenToFlowPosition({ x: clientX, y: clientY });
+      let position = screenToFlowPosition({ x: clientX, y: clientY });
 
-    // ✅ Optional: snap to grid (20px here)
-    const snap = (val, gridSize = 20) => Math.round(val / gridSize) * gridSize;
-    position = {
-      x: snap(position.x),
-      y: snap(position.y),
-    };
+      // Optional: snap to grid (20px here)
+      const snap = (val, gridSize = 20) => Math.round(val / gridSize) * gridSize;
+      position = {
+        x: snap(position.x),
+        y: snap(position.y),
+      };
 
-    const targetHandle = getOppositeHandle(sourceHandle);
+      const targetHandle = getOppositeHandle(sourceHandle);
 
-    const newNode = {
-      id: newNodeId,
-      position,
-      data: { label: `Node ${newNodeId}`, onChange: onLabelChange },
-      origin: [0.5, 0.0],
-      snapToGrid: true,
-      type: "custom",
-    };
+      const newNode = {
+        id: newNodeId,
+        position,
+        data: { label: `Node ${newNodeId}`, onChange: onLabelChange },
+        origin: [0.5, 0.0],
+        snapToGrid: true,
+        type: "custom",
+      };
 
-    setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) => nds.concat(newNode));
 
-    setEdges((eds) =>
-      eds.concat({
-        id: `e${Date.now()}`,
-        source: sourceNodeId,
-        sourceHandle,
-        target: newNodeId,
-        targetHandle,
-        type: "straight",
-      })
-    );
+      setEdges((eds) =>
+        eds.concat({
+          id: `e${Date.now()}`,
+          source: sourceNodeId,
+          sourceHandle,
+          target: newNodeId,
+          targetHandle,
+          type: "straight",
+        })
+      );
 
-    connectingHandleId.current = null;
-    connectingNodeId.current = null;
-  },
-  [screenToFlowPosition, onLabelChange, setNodes, setEdges]
-);
-
+      connectingHandleId.current = null;
+      connectingNodeId.current = null;
+    },
+    [screenToFlowPosition, onLabelChange, setNodes, setEdges]
+  );
 
   // Save flow state with dummy POST request
   const saveFlow = useCallback(async () => {
@@ -232,6 +228,14 @@ const onConnectEnd = useCallback(
     }
   }, [nodes, edges]);
 
+  // --- Fit view after mount (with timeout) ---
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      fitView();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [fitView, nodes, edges]);
+
   return (
     <div
       className="wrapper"
@@ -259,7 +263,7 @@ const onConnectEnd = useCallback(
         style={{ 
           overflow: "visible",
           position: "relative",
-          width: "100%",
+          width: "100vw",
           height: "100%",
         }}
         fitView
@@ -270,7 +274,6 @@ const onConnectEnd = useCallback(
           maxZoom: 3,
         }}
         defaultViewport={{ x: 0, y: 0, zoom: 1.5 }}
-        // Add these props to fix coordinate space
         translateExtent={[[-2000, -2000], [2000, 2000]]}
         nodeExtent={[[-2000, -2000], [2000, 2000]]}
         panOnDrag={true}
@@ -304,16 +307,15 @@ const FlowTree = ({ nodes, edges }) => (
   <div 
     className="flowtree-isolation-container"
     style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 999,
-      background: 'white',
-      overflow: 'visible',
-      contain: 'none',
-    }}
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1,
+        overflow: 'visible',
+        contain: 'none',
+      }}
   >
     <div 
       style={{
