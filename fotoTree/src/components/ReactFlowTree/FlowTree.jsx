@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import {
   ReactFlow,
   useNodesState,
@@ -13,7 +13,6 @@ import {
 
 import "@xyflow/react/dist/style.css";
 import CustomNode from "../ReactFlowTree/CustomNodes";
-import PersonDropdown from "../personDropDown/PersonDropDown";
 
 // register custom node types
 const nodeTypes = { custom: CustomNode };
@@ -23,17 +22,13 @@ const defaultNodes = [
   {
     id: "n1",
     position: { x: 0, y: 0 },
-    data: { label: "Me" },
+    data: { label: "Me", onChange: () => {}, people: [] },
     type: "custom",
   },
-].map((node) => ({
-  ...node,
-  data: { ...node.data, onChange: () => {} },
-}));
-
+];
 const defaultEdges = [];
 
-/* Get max node id number */
+// --- ID helpers ---
 const getMaxNodeId = (nodes) =>
   nodes.reduce((max, node) => {
     const match = node.id.match(/^n(\d+)$/);
@@ -46,10 +41,42 @@ const getId = () => `n${++idCounter}`;
 // --- Flow graph component ---
 const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
   const reactFlowWrapper = useRef(null);
+  const [people, setPeople] = useState([]);
+
+  // fetch people for dropdowns
+  useEffect(() => {
+    if (!mongoId) return;
+    const fetchPeople = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/person?creator=${mongoId}`);
+        if (!res.ok) throw new Error("Failed to fetch people");
+        const data = await res.json();
+        setPeople(data);
+        console.log("people data", data)
+      } catch (err) {
+        console.log("err", err);
+      }
+    };
+    fetchPeople();
+  }, [mongoId]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(
-    initialNodes?.length ? initialNodes : defaultNodes
+    initialNodes?.length
+      ? initialNodes.map((n) => ({ ...n, data: { ...n.data, people } }))
+      : defaultNodes.map((n) => ({ ...n, data: { ...n.data, people } }))
   );
+
+  // update nodes when people are fetched
+  useEffect(() => {
+    if (people.length === 0) return;
+    setNodes((nds) =>
+      nds.map((node) => ({
+        ...node,
+        data: { ...node.data, people },
+      }))
+    );
+  }, [people, setNodes]);
+
   const [edges, setEdges, onEdgesChange] = useEdgesState(
     initialEdges?.length ? initialEdges : defaultEdges
   );
@@ -62,14 +89,23 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
   const isCreatingNode = useRef(false);
 
   const getOppositeHandle = (handleId) =>
-    ({ top: "bottom", bottom: "top", left: "right", right: "left" }[handleId] || "top");
+    ({ top: "bottom", bottom: "top", left: "right", right: "left" }[handleId] ||
+      "top");
 
   const onLabelChange = useCallback(
     (id, newLabel) => {
       setNodes((nds) =>
         nds.map((node) =>
           node.id === id
-            ? { ...node, data: { ...node.data, label: newLabel, onChange: node.data.onChange } }
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  label: newLabel,
+                  onChange: node.data.onChange,
+                  people: node.data.people,
+                },
+              }
             : node
         )
       );
@@ -111,13 +147,11 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
       const snap = (val, g = 20) => Math.round(val / g) * g;
       position = { x: snap(position.x), y: snap(position.y) };
 
-      const targetHandle = getOppositeHandle(sourceHandle);
-
       setNodes((nds) =>
         nds.concat({
           id: newNodeId,
           position,
-          data: { label: `Node ${newNodeId}`, onChange: onLabelChange },
+          data: { label: `Node ${newNodeId}`, onChange: onLabelChange, people },
           type: "custom",
         })
       );
@@ -127,14 +161,14 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
           source: sourceNodeId,
           sourceHandle,
           target: newNodeId,
-          targetHandle,
+          targetHandle: getOppositeHandle(sourceHandle),
           type: "straight",
         })
       );
 
       isCreatingNode.current = false;
     },
-    [nodes, screenToFlowPosition, onLabelChange, setNodes, setEdges]
+    [nodes, screenToFlowPosition, onLabelChange, setNodes, setEdges, people]
   );
 
   const saveFlow = useCallback(async () => {
@@ -211,7 +245,6 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
         >
           <button onClick={saveFlow}>💾 Save</button>
         </div>
-        <PersonDropdown mongoId={mongoId} />
       </ReactFlow>
     </div>
   );
@@ -219,11 +252,10 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
 
 // --- Wrapper ---
 const FlowTree = ({ nodes, edges, treeId, mongoId }) => {
-  useEffect(() => {
-    if (!treeId) alert("Tree ID is missing! Unable to save flow.");
-  }, [treeId]);
-
-  if (!treeId) return null;
+  if (!treeId) {
+    alert("Tree ID is missing! Unable to save flow.");
+    return null;
+  }
 
   return (
     <div
