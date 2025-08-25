@@ -39,16 +39,39 @@ app.get('/', (req, res) => {
     res.send('Root Route')
 });
 //READ - GET for person
+//READ - GET for all persons OR filter by creator
 app.get('/person', function(req, res) {
-    person.find({})
+    const { creator } = req.query;  // ?creator=someId
+    const filter = creator ? { creator } : {};
+
+    person.find(filter)
+    .sort({ firstName: 1 }) // sort by first name
     .then(function(data) {
-        res.json(data)
+        res.json(data);
     })
     .catch(function(error) {
-        console.log('Error getting from Mongo person', error)
-        res.status(400).json({ message: 'Error getting from Mongo person' })
-    })
+        console.log('Error getting from Mongo person', error);
+        res.status(400).json({ message: 'Error getting from Mongo person' });
+    });
 });
+
+//READ - GET for single person by id
+app.get('/person/:id', function(req, res) {
+    const { id } = req.params;
+
+    person.findById(id)
+    .then(function(data) {
+        if (!data) {
+            return res.status(404).json({ message: 'Person not found' });
+        }
+        res.json(data);
+    })
+    .catch(function(error) {
+        console.log('Error getting single Mongo person', error);
+        res.status(400).json({ message: 'Error getting single Mongo person' });
+    });
+});
+
 //READ - GET for user
 //made server accept clerk id to return our id using url params
 app.get('/user/:clerkId', function(req, res) {

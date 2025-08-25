@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import {
   ReactFlow,
   useNodesState,
@@ -13,13 +13,12 @@ import {
 
 import "@xyflow/react/dist/style.css";
 import CustomNode from "../ReactFlowTree/CustomNodes";
+import PersonDropdown from "../personDropDown/PersonDropDown";
 
 // register custom node types
-const nodeTypes = {
-  custom: CustomNode,
-};
+const nodeTypes = { custom: CustomNode };
 
-// --- Default example nodes (used if DB has no nodes/edges) ---
+// --- Default nodes/edges for empty DB ---
 const defaultNodes = [
   {
     id: "n1",
@@ -27,52 +26,25 @@ const defaultNodes = [
     data: { label: "Me" },
     type: "custom",
   },
-  {
-    id: "n2",
-    position: { x: 0, y: 100 },
-    data: { label: "My Child" },
-    type: "custom",
-  },
 ].map((node) => ({
   ...node,
-  data: {
-    ...node.data,
-    onChange: () => {}, // Placeholder
-  },
+  data: { ...node.data, onChange: () => {} },
 }));
 
-const defaultEdges = [
-  {
-    id: "e1",
-    source: "n1",
-    target: "n2",
-    type: "straight",
-    sourceHandle: "bottom",
-    targetHandle: "top",
-  },
-];
+const defaultEdges = [];
 
-/* 
-  purpose-dynamic id creation, to avoid bugs when a tree is loaded
-  - finds the highest numeric node ID in the current set
-  - ensures new nodes always increment from the max id
-*/
-const getMaxNodeId = (nodes) => {
-  return nodes.reduce((max, node) => {
+/* Get max node id number */
+const getMaxNodeId = (nodes) =>
+  nodes.reduce((max, node) => {
     const match = node.id.match(/^n(\d+)$/);
-    if (match) {
-      const num = parseInt(match[1], 10);
-      return Math.max(max, num);
-    }
-    return max;
+    return match ? Math.max(max, parseInt(match[1], 10)) : max;
   }, 0);
-};
 
 let idCounter = 0;
 const getId = () => `n${++idCounter}`;
 
-// --- Flow component (renders the graph) ---
-const Flow = ({ initialNodes, initialEdges, treeId }) => {
+// --- Flow graph component ---
+const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
   const reactFlowWrapper = useRef(null);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(
@@ -83,39 +55,21 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
   );
 
   const { screenToFlowPosition } = useReactFlow();
-
-  // 🔹 reset idCounter when nodes are initialized
-  idCounter = getMaxNodeId(nodes);
+  idCounter = getMaxNodeId(nodes); // reset counter
 
   const connectingHandleId = useRef(null);
   const connectingNodeId = useRef(null);
   const isCreatingNode = useRef(false);
 
-  // helper to get opposite handle when connecting nodes
-  const getOppositeHandle = (handleId) => {
-    const opposites = {
-      top: "bottom",
-      bottom: "top",
-      left: "right",
-      right: "left",
-    };
-    return opposites[handleId] || "top";
-  };
+  const getOppositeHandle = (handleId) =>
+    ({ top: "bottom", bottom: "top", left: "right", right: "left" }[handleId] || "top");
 
-  // updates node label when edited
   const onLabelChange = useCallback(
     (id, newLabel) => {
       setNodes((nds) =>
         nds.map((node) =>
           node.id === id
-            ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  label: newLabel,
-                  onChange: node.data.onChange,
-                },
-              }
+            ? { ...node, data: { ...node.data, label: newLabel, onChange: node.data.onChange } }
             : node
         )
       );
@@ -123,26 +77,20 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
     [setNodes]
   );
 
-  // connection start handler
   const onConnectStart = useCallback((_, { handleId, nodeId }) => {
     connectingHandleId.current = handleId;
     connectingNodeId.current = nodeId;
-    isCreatingNode.current = true; // mark potential node creation
+    isCreatingNode.current = true;
   }, []);
 
-  // connect existing nodes
   const onConnect = useCallback(
     (params) => {
-      if (isCreatingNode.current) {
-        // suppress default connect while creating a new node
-        return;
-      }
+      if (isCreatingNode.current) return;
       setEdges((eds) => addEdge(params, eds));
     },
     [setEdges]
   );
 
-  // connect + create new node
   const onConnectEnd = useCallback(
     (event) => {
       if (!isCreatingNode.current) return;
@@ -150,11 +98,7 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
       const sourceHandle = connectingHandleId.current;
       const sourceNodeId = connectingNodeId.current;
 
-      // sanity check: ensure source node still exists
-      const sourceNodeExists = nodes.some((n) => n.id === sourceNodeId);
-      if (!sourceHandle || !sourceNodeId || !sourceNodeExists) {
-        connectingHandleId.current = null;
-        connectingNodeId.current = null;
+      if (!sourceHandle || !sourceNodeId || !nodes.some((n) => n.id === sourceNodeId)) {
         isCreatingNode.current = false;
         return;
       }
@@ -164,19 +108,19 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
         "changedTouches" in event ? event.changedTouches[0] : event;
 
       let position = screenToFlowPosition({ x: clientX, y: clientY });
-      const snap = (val, gridSize = 20) => Math.round(val / gridSize) * gridSize;
+      const snap = (val, g = 20) => Math.round(val / g) * g;
       position = { x: snap(position.x), y: snap(position.y) };
 
       const targetHandle = getOppositeHandle(sourceHandle);
 
-      const newNode = {
-        id: newNodeId,
-        position,
-        data: { label: `Node ${newNodeId}`, onChange: onLabelChange },
-        type: "custom",
-      };
-
-      setNodes((nds) => nds.concat(newNode));
+      setNodes((nds) =>
+        nds.concat({
+          id: newNodeId,
+          position,
+          data: { label: `Node ${newNodeId}`, onChange: onLabelChange },
+          type: "custom",
+        })
+      );
       setEdges((eds) =>
         eds.concat({
           id: `e${Date.now()}`,
@@ -188,20 +132,13 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
         })
       );
 
-      // reset refs
-      connectingHandleId.current = null;
-      connectingNodeId.current = null;
       isCreatingNode.current = false;
     },
     [nodes, screenToFlowPosition, onLabelChange, setNodes, setEdges]
   );
 
-  // Save flow state with updated nodes/edges to backend
   const saveFlow = useCallback(async () => {
-    if (!treeId) {
-      alert("Error: Tree ID is undefined.");
-      return;
-    }
+    if (!treeId) return;
 
     const flowData = {
       nodes: nodes.map(({ id, type, position, data }) => ({
@@ -221,39 +158,27 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
     };
 
     try {
-      const response = await fetch(`http://localhost:5000/tree/${treeId}`, {
+      const res = await fetch(`http://localhost:5000/tree/${treeId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(flowData),
       });
-
-      if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
-
-      const updatedTree = await response.json();
-      setNodes(updatedTree.nodes);
-      setEdges(updatedTree.edges);
-
-      alert("Flow saved successfully!");
-    } catch (error) {
-      console.error("Save failed:", error);
+      if (!res.ok) throw new Error(res.statusText);
+      const updated = await res.json();
+      setNodes(updated.nodes);
+      setEdges(updated.edges);
+      alert("Flow saved!");
+    } catch (err) {
+      console.error("Save failed:", err);
       alert("Failed to save flow.");
     }
   }, [nodes, edges, treeId]);
-
-  const saveRef = useRef(saveFlow);
-  saveRef.current = saveFlow;
 
   return (
     <div
       className="wrapper"
       ref={reactFlowWrapper}
-      style={{
-        width: "100vw",
-        height: "100vh",
-        overflow: "visible",
-        position: "relative",
-        contain: "none",
-      }}
+      style={{ width: "100vw", height: "100vh", position: "relative" }}
     >
       <ReactFlow
         nodeTypes={nodeTypes}
@@ -264,21 +189,9 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
         onConnectStart={onConnectStart}
         onConnect={onConnect}
         onConnectEnd={onConnectEnd}
-        nodeOrigin={[0.5, 0.5]}
         snapToGrid
         snapGrid={[20, 20]}
         fitView
-        fitViewOptions={{ padding: 50, includeHiddenNodes: true, minZoom: 1.5, maxZoom: 3 }}
-        defaultViewport={{ x: 0, y: 0, zoom: 1.5 }}
-        translateExtent={[[-2000, -2000], [2000, 2000]]}
-        nodeExtent={[[-2000, -2000], [2000, 2000]]}
-        panOnDrag
-        zoomOnScroll
-        zoomOnPinch
-        preventScrolling={false}
-        nodesDraggable
-        nodesConnectable
-        elementsSelectable
       >
         <Background />
         <MiniMap />
@@ -296,21 +209,21 @@ const Flow = ({ initialNodes, initialEdges, treeId }) => {
             gap: "10px",
           }}
         >
-          <button onClick={() => saveRef.current?.()}>💾 Save</button>
-          <button onClick={() => window.history.back()}>← Back</button>
+          <button onClick={saveFlow}>💾 Save</button>
         </div>
+        <PersonDropdown mongoId={mongoId} />
       </ReactFlow>
     </div>
   );
 };
 
-// --- Wrap Flow in ReactFlowProvider ---
-const FlowTree = ({ nodes, edges, treeId }) => {
-  if (!treeId) {
-    console.error("Tree ID is missing or undefined.");
-    alert("Tree ID is missing! Unable to save flow.");
-    return null;
-  }
+// --- Wrapper ---
+const FlowTree = ({ nodes, edges, treeId, mongoId }) => {
+  useEffect(() => {
+    if (!treeId) alert("Tree ID is missing! Unable to save flow.");
+  }, [treeId]);
+
+  if (!treeId) return null;
 
   return (
     <div
@@ -321,27 +234,11 @@ const FlowTree = ({ nodes, edges, treeId }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 100,
         background: "white",
-        overflow: "visible",
-        contain: "none",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          zIndex: 1001,
-          background: "rgba(255,255,255,0.9)",
-          padding: "5px",
-          borderRadius: "4px",
-        }}
-      >
-        <button onClick={() => window.history.back()}>← Back</button>
-      </div>
       <ReactFlowProvider>
-        <Flow initialNodes={nodes} initialEdges={edges} treeId={treeId} />
+        <Flow initialNodes={nodes} initialEdges={edges} treeId={treeId} mongoId={mongoId} />
       </ReactFlowProvider>
     </div>
   );

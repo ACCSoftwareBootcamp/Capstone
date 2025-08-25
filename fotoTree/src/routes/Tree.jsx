@@ -65,7 +65,7 @@ const fetchTree = async (mongoId) => {
       ) : treeData ? (
         /* Full viewport for tree display */
    <>
-        <FlowTree nodes={treeData.nodes} edges={treeData.edges} treeId={treeData._id}/>
+        <FlowTree nodes={treeData.nodes} edges={treeData.edges} treeId={treeData._id} mongoId={mongoId}/>
   </>
       ) : (
         <div > 
