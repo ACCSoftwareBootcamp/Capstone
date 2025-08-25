@@ -50,6 +50,7 @@ const CustomNode = ({ id, data, selected }) => {
       <Handle type="source" position={Position.Left} id="left" style={{ left: -8, top: '50%', transform: 'translateY(-50%)' }} />
 
       {/* Editable label + dropdown */}
+      {/* when clicking drop down i want clear input to see all people, type to filter, click to clear again. enter/arrows to  */}
       {isEditing ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <input
