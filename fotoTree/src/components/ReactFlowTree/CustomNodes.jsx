@@ -5,27 +5,75 @@ import './CustomNodes.css';
 const CustomNode = ({ id, data, selected }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [label, setLabel] = useState(data.label || '');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
   const inputRef = useRef(null);
-  const containerRef = useRef(null);
 
-  // Double-click enables editing
-  const handleDoubleClick = () => setIsEditing(true);
-
-  // Blur disables editing and notifies parent
-  const handleBlur = (e) => {
-    // If click was inside container (like the dropdown), don't blur
-    if (containerRef.current && containerRef.current.contains(e.relatedTarget)) return;
-    setIsEditing(false);
-    if (data.onChange) data.onChange(id, label);
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+    setShowDropdown(true);
+    setHighlightedIndex(-1);
   };
 
-  const handleChange = (e) => setLabel(e.target.value);
+  const handleBlur = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      setShowDropdown(false);
+      if (data.onChange) data.onChange(id, label);
+    }
+  };
 
-  const handleSelectChange = (e) => {
-    const selectedPerson = e.target.value;
-    if (selectedPerson) {
-      setLabel(selectedPerson);
-      if (data.onChange) data.onChange(id, selectedPerson);
+  const handleChange = (e) => {
+    setLabel(e.target.value);
+    setShowDropdown(true);
+    setHighlightedIndex(-1);
+  };
+
+  const handlePersonClick = (fullName) => {
+    setLabel(fullName);
+    if (data.onChange) data.onChange(id, fullName);
+    setIsEditing(false);
+    setShowDropdown(false);
+    setHighlightedIndex(-1);
+  };
+
+  const list = data.people || [];
+  const filteredPeople = label
+    ? list.filter((p) =>
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(label.toLowerCase())
+      )
+    : list; // show all when empty
+
+  const handleKeyDown = (e) => {
+    if (!showDropdown || filteredPeople.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev + 1) % filteredPeople.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev - 1 + filteredPeople.length) % filteredPeople.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && filteredPeople[highlightedIndex]) {
+        const p = filteredPeople[highlightedIndex];
+        handlePersonClick(`${p.firstName} ${p.lastName}`);
+      } else {
+        setIsEditing(false);
+        setShowDropdown(false);
+        if (data.onChange) data.onChange(id, label);
+      }
+    } else if (e.key === 'Tab') {
+      if (filteredPeople.length > 0) {
+        e.preventDefault();
+        const p = highlightedIndex >= 0 ? filteredPeople[highlightedIndex] : filteredPeople[0];
+        handlePersonClick(`${p.firstName} ${p.lastName}`);
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setShowDropdown(false);
+      setHighlightedIndex(-1);
     }
   };
 
@@ -35,7 +83,6 @@ const CustomNode = ({ id, data, selected }) => {
 
   return (
     <div
-      ref={containerRef}
       className={`custom-node ${selected ? 'selected' : ''}`}
       onDoubleClick={handleDoubleClick}
     >
@@ -50,30 +97,63 @@ const CustomNode = ({ id, data, selected }) => {
       <Handle type="source" position={Position.Left} id="left" style={{ left: -8, top: '50%', transform: 'translateY(-50%)' }} />
 
       {/* Editable label + dropdown */}
-      {/* when clicking drop down i want clear input to see all people, type to filter, click to clear again. enter/arrows to  */}
       {isEditing ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <input
             ref={inputRef}
             value={label}
+            placeholder="Type to filter existing people"
             onChange={handleChange}
             onBlur={handleBlur}
-            style={{ width: '100%', boxSizing: 'border-box' }}
+            onKeyDown={handleKeyDown}
+            style={{ flex: 1, boxSizing: 'border-box' }}
           />
-          {data.people && data.people.length > 0 && (
-            <select
-              value=""
-              onChange={handleSelectChange}
-              onBlur={handleBlur} // ensure blur behaves the same
-              style={{ width: '100%' }}
+
+          {showDropdown && (
+            <div
+              tabIndex={-1}
+              style={{
+                border: '1px solid #ccc',
+                borderRadius: 4,
+                background: '#fff',
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                zIndex: 10,
+                maxHeight: 150,
+                overflowY: 'auto'
+              }}
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
             >
-              <option value="">Select a person...</option>
-              {data.people.map((p) => (
-                <option key={p._id} value={`${p.firstName} ${p.lastName}`}>
-                  {`${p.firstName} ${p.lastName}`}
-                </option>
-              ))}
-            </select>
+              {filteredPeople.length > 0 ? (
+                filteredPeople.map((p, index) => {
+                  const fullName = `${p.firstName} ${p.lastName}`;
+                  const isActive = index === highlightedIndex;
+                  return (
+                    <div
+                      key={p._id}
+                      tabIndex={-1}
+                      onClick={() => handlePersonClick(fullName)}
+                      style={{
+                        padding: '4px 8px',
+                        cursor: 'pointer',
+                        background: isActive ? '#eee' : 'transparent'
+                      }}
+                    >
+                      {fullName}
+                    </div>
+                  );
+                })
+              ) : (
+                <div style={{ padding: '4px 8px', color: '#888' }}>
+                  No matches found
+                </div>
+              )}
+            </div>
           )}
         </div>
       ) : (
