@@ -1,7 +1,10 @@
 // imports dotenv and runs it, reading the .env file
-require('dotenv').config()
+require('dotenv').config({ path: './.env' });
 // import mongoose
 const mongoose = require('mongoose')
+
+
+
 
 // create connection object from process.env
 const {URI, MONGO_USER, MONGO_PASSWORD, MONGO_DB, MONGO_PORT, MONGO_HOST} = process.env; 

@@ -8,7 +8,13 @@ const PORT=process.env.PORT || 3000
 const logger= require('morgan')
 
 const morgan = require('morgan');
-const dotenv = require('dotenv');
+
+
+//use dotenv to read .env file
+const dotenv = require('dotenv').config({ path: './.env' });
+//import cloudinary to upload files
+const cloudinary = require('./connections/cloudinary');
+
 const cors = require('cors');
 
 //importing mongoose model
@@ -18,6 +24,10 @@ const person = require('./models/person');
 
 // open up the CORS setting server so any browser client can access this
 app.use(cors())
+
+
+//import multer to handle file uploads
+const upload = require("./middleware/multer");
 
 
 //middleware---for use between req and res cylces
@@ -31,6 +41,10 @@ app.use(express.urlencoded())
 
 // connect the db to backend server
 require('./connections/mongoConnection')
+
+//DB Model
+const Image = require("./models/Image"); // Import the Image model
+const multer = require("multer");
 
 //ROUTES
 // READ - GET routes for root, user, tree, branch
@@ -97,6 +111,30 @@ app.post('/person', function(req, res) {
     })
 
 });
+
+//CREATE - POST route for image upload
+// multer captures the image and stores it on the hard disk of server
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    //Upload our image to cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "uploads", // specify the folder in cloudinary
+    });
+
+    //Upon successful response from cloudinary save url to DB
+    const newImage = new Image({
+      imageUrl: result.secure_url,
+    });
+
+    // Now with the model, save it to mongoDB
+    const savedImage = await newImage.save();
+    res.json(savedImage);
+  } catch (error) {
+    // if error happens respond accordingly
+    res.status(500).json({ error: "Something went wrong." });
+  }
+});
+
 
 //CREATE - POST for user 
 app.post('/user', function(req, res) {
@@ -228,4 +266,4 @@ app.delete('/tree/:id', function(req, res) {
 });
 
 //listen
-app.listen(PORT, ()=> console.log(`FotoTree App is listening on PORT: ${PORT} `))
+app.listen(PORT, ()=> console.log(`FotoTree App is listening on PORT: ${PORT} `));
