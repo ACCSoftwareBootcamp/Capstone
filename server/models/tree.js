@@ -1,28 +1,57 @@
 // models/Tree.js
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-require('../connections/mongoConnection');
+require("../connections/mongoConnection.js");
 
-const treeSchema = new Schema({
-  name: {
-    type: String,
-    required: true
+// Define node schema
+const nodeSchema = new Schema({
+  id: String,
+  type: String,
+  position: {
+    x: Number,
+    y: Number,
   },
-  owner: {
-    type: Schema.Types.ObjectId,
-    ref: 'user',
-    required: true
+  data: {
+    label: String,
+    onChange: { type: Schema.Types.Mixed }, // Function or other custom logic
   },
-  createdDate: {
-    type: Date,
-    default: Date.now
-  },
-  description: String
-}, {
-  timestamps: true
 });
 
-const TreeModel = mongoose.model('tree', treeSchema);
+// Define edge schema
+const edgeSchema = new Schema({
+  id: String,
+  source: String,
+  target: String,
+  sourceHandle: String,
+  targetHandle: String,
+  type: String,
+});
+
+const treeSchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
+    nodes: [nodeSchema], // Use nodeSchema for validation
+    edges: [edgeSchema], // Use edgeSchema for validation
+    createdDate: {
+      type: Date,
+      default: Date.now,
+    },
+    description: String,
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const TreeModel = mongoose.model("tree", treeSchema);
 
 module.exports = TreeModel;

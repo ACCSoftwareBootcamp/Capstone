@@ -22,7 +22,7 @@ useEffect(() => {
     const fetchUserAndTree = async () => {
       try {
         // 1. Find existing user
-        const userRes = await fetch(`http://localhost:3000/user/${user.id}`);
+        const userRes = await fetch(`http://localhost:5000/user/${user.id}`);
         if (!userRes.ok) throw new Error("Failed to fetch user");
         const userData = await userRes.json();
         console.log("existing user data", userData);
@@ -30,7 +30,7 @@ useEffect(() => {
         setMongoUser(userData._id);
 
         // 3. Use mongo user ID to find tree
-        const treeRes = await fetch(`http://localhost:3000/tree/${userData._id}`);
+        const treeRes = await fetch(`http://localhost:5000/tree/${userData._id}`);
         if (!treeRes.ok) throw new Error("Failed to fetch tree");
         const treeData = await treeRes.json();
         console.log("tree data", treeData);
@@ -99,7 +99,7 @@ useEffect(() => {
   console.log("Saving person:", personObj);
 //send it to server as a POST
   try {
-    const res = await fetch("http://localhost:3000/person", {
+    const res = await fetch(`http://localhost:5000/person/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(personObj),
