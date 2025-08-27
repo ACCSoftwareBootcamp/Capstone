@@ -100,7 +100,10 @@ const LandingPage = () => {
           <h3>
             The "F" is for <strong>Family</strong>
           </h3>
-          <p>Hi, {firstName} let's check out your family tree!</p>
+          <p>Hi {firstName}, let's check out your family tree!</p>
+             <div>
+            <img src={landingPageImg} alt="Computer using FotoTree" />
+          </div>
           <p>Click below to view your tree:</p>
           <Link to="/tree">See my FotoTree!</Link>
           <br />

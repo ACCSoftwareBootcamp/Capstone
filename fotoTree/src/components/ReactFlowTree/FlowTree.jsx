@@ -1,4 +1,6 @@
 import { useCallback, useRef, useEffect, useState } from "react";
+//for back button functionality
+import { useNavigate } from "react-router-dom";
 import {
   ReactFlow,
   useNodesState,
@@ -42,6 +44,7 @@ const getId = () => `n${++idCounter}`;
 const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
   const reactFlowWrapper = useRef(null);
   const [people, setPeople] = useState([]);
+  const navigate = useNavigate(); // <--- useNavigate hook
 
   // fetch people for dropdowns
   useEffect(() => {
@@ -65,7 +68,6 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
       : defaultNodes.map((n) => ({ ...n, data: { ...n.data, people } }))
   );
 
-  // update nodes when people are fetched
   useEffect(() => {
     if (people.length === 0) return;
     setNodes((nds) =>
@@ -81,16 +83,14 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
   );
 
   const { screenToFlowPosition } = useReactFlow();
-  idCounter = getMaxNodeId(nodes); // reset counter on ids
+  idCounter = getMaxNodeId(nodes);
 
   const connectingHandleId = useRef(null);
   const connectingNodeId = useRef(null);
 
-  //edge creation goes from one to it's counterpart
   const getOppositeHandle = (handleId) =>
     ({ top: "bottom", bottom: "top", left: "right", right: "left" }[handleId] || "top");
 
-  //re map the node when the label data changes
   const onLabelChange = useCallback(
     (id, newLabel) => {
       setNodes((nds) =>
@@ -112,23 +112,18 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     [setNodes]
   );
 
-  // store the source handle and node when starting a connection
   const onConnectStart = useCallback((_, { handleId, nodeId }) => {
     connectingHandleId.current = handleId;
     connectingNodeId.current = nodeId;
   }, []);
 
-  //  existing nodes now connect  with straight edges (defaults to curved)
   const onConnect = useCallback(
     (params) => {
-      setEdges((eds) =>
-        addEdge({ ...params, type: "straight" }, eds)
-      );
+      setEdges((eds) => addEdge({ ...params, type: "straight" }, eds));
     },
     [setEdges]
   );
 
-  // connect + create new node only if drop is in empty space- otherwise will connect with existing node handle
   const onConnectEnd = useCallback(
     (event) => {
       const sourceHandle = connectingHandleId.current;
@@ -140,20 +135,17 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
         return;
       }
 
-      // check if dropped on a valid handle
       const targetElement = document.elementFromPoint(event.clientX, event.clientY);
       if (targetElement?.classList.contains("react-flow__handle")) {
         connectingHandleId.current = null;
         connectingNodeId.current = null;
-        return; // React Flow handles the edge automatically
+        return;
       }
 
-      // drop in empty space → create new node
       const newNodeId = getId();
       const { clientX, clientY } =
         "changedTouches" in event ? event.changedTouches[0] : event;
 
-      //round to our grid
       let position = screenToFlowPosition({ x: clientX, y: clientY });
       const snap = (val, g = 20) => Math.round(val / g) * g;
       position = { x: snap(position.x), y: snap(position.y) };
@@ -184,7 +176,6 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     [nodes, screenToFlowPosition, onLabelChange, setNodes, setEdges, people]
   );
 
-  //updates positions if you use save button
   const saveFlow = useCallback(async () => {
     if (!treeId) return;
 
@@ -205,7 +196,6 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
       })),
     };
 
-    //calls server with new position
     try {
       const res = await fetch(`http://localhost:5001/tree/${treeId}`, {
         method: "PUT",
@@ -223,7 +213,6 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     }
   }, [nodes, edges, treeId]);
 
-  // used to filter out existing labels
   const usedLabels = nodes.map((n) => n.data.label);
 
   const nodesWithFilteredPeople = nodes.map((n) => ({
@@ -260,6 +249,8 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
         <Background />
         <MiniMap />
         <Controls />
+
+        {/* Save + Back Buttons */}
         <div
           style={{
             position: "absolute",
@@ -273,6 +264,31 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
             gap: "10px",
           }}
         >
+          <button
+            onClick={() => {
+              const proceed = window.confirm(
+                "If you have made any unsaved changes, all edits will be lost. Continue?"
+              );
+              if (proceed) {
+                navigate(-1); // go back in history
+              }
+            }}
+            style={{
+              cursor: "pointer",
+              padding: "5px 10px",
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "14px",
+              transition: "background-color 0.2s",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#e0e0e0")}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+            title="Go back"
+          >
+            ← Back
+          </button>
+
           <button onClick={saveFlow}>💾 Save</button>
         </div>
       </ReactFlow>

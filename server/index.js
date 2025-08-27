@@ -256,6 +256,7 @@ app.put("/person/:id", function (req, res) {
     spouseName,
     children,
     biography,
+    photoArray,
   } = req.body;
 
   person
@@ -273,6 +274,7 @@ app.put("/person/:id", function (req, res) {
         spouseName,
         children,
         biography,
+        photoArray,
       },
       { new: true }
     )
