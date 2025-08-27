@@ -3,13 +3,10 @@ const express = require('express')
 //create an instance of express
 const app = express()
 //establish port for listening
-const PORT=process.env.PORT || 3000
+const PORT=process.env.PORT || 5001
 //use a logger to track requests
 const logger= require('morgan')
-
 const morgan = require('morgan');
-
-
 
 //use dotenv to read .env file
 const dotenv = require('dotenv').config({ path: './.env' });
@@ -24,15 +21,18 @@ const user = require('./models/user');
 const person = require('./models/person'); 
 
 // open up the CORS setting server so any browser client can access this
-app.use(cors())
-
+app.use(cors({
+  origin: 'http://localhost:5173', // frontend URL
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // if you need to send cookies/auth headers
+}))
 
 //import multer to handle file uploads
 const multer = require("./middleware/multer");
 
 //DB Model
 const ImageModel = require('./models/Image') // Import the Image model
-
 
 //middleware---for use between req and res cylces
 app.use(logger('dev'))
@@ -44,9 +44,8 @@ app.use(express.urlencoded())
 // open the uploads folder so we can read it 
 app.use(express.static(__dirname + '/uploads/'))
 
-
 // connect the db to backend server
-require('./connections/mongoConnection')
+require('./connections/mongoConnection.js')
 
 //DB Model
 const Image = require("./models/Image"); // Import the Image model
@@ -59,16 +58,39 @@ app.get('/', (req, res) => {
     res.send('Root Route')
 });
 //READ - GET for person
+//READ - GET for all persons OR filter by creator
 app.get('/person', function(req, res) {
-    person.find({})
+    const { creator } = req.query;  // ?creator=someId
+    const filter = creator ? { creator } : {};
+
+    person.find(filter)
+    .sort({ firstName: 1 }) // sort by first name
     .then(function(data) {
-        res.json(data)
+        res.json(data);
     })
     .catch(function(error) {
-        console.log('Error getting from Mongo person', error)
-        res.status(400).json({ message: 'Error getting from Mongo person' })
-    })
+        console.log('Error getting from Mongo person', error);
+        res.status(400).json({ message: 'Error getting from Mongo person' });
+    });
 });
+
+//READ - GET for single person by id
+app.get('/person/:id', function(req, res) {
+    const { id } = req.params;
+
+    person.findById(id)
+    .then(function(data) {
+        if (!data) {
+            return res.status(404).json({ message: 'Person not found' });
+        }
+        res.json(data);
+    })
+    .catch(function(error) {
+        console.log('Error getting single Mongo person', error);
+        res.status(400).json({ message: 'Error getting single Mongo person' });
+    });
+});
+
 //READ - GET for user
 //made server accept clerk id to return our id using url params
 app.get('/user/:clerkId', function(req, res) {
@@ -101,12 +123,13 @@ app.get('/tree/:owner', function(req, res) {
 
 //CREATE - POST routes for user, tree, branch
 // CREATE - POST for person
+// TODO - add all fields 
 app.post('/person', function(req, res) {
 
-    const { treeId, firstName,lastName  } = req.body; 
+    const { treeId, firstName,lastName, creator, photoArray  } = req.body; 
 
     person.create ({
-        treeId, firstName, lastName
+        treeId, firstName, lastName, creator, photoArray
     })
     .then  (function (data) {
         res.json(data)
@@ -220,18 +243,29 @@ app.put('/user/:id', function(req, res) {
 // UPDATE - PUT for tree
 app.put('/tree/:id', function(req, res) {
     const { id } = req.params;
-    const { name, owner, description } = req.body;
+    const { name, owner, description, nodes, edges } = req.body;
+
+    // Validate or process nodes and edges if necessary
+    if (!Array.isArray(nodes) || !Array.isArray(edges)) {
+        return res.status(400).json({ message: 'Invalid data format for nodes or edges' });
+    }
+
     tree.findByIdAndUpdate(id, {
-        name, owner, description
+        name,
+        owner,
+        description,
+        nodes,    
+        edges,   
     }, { new: true })
     .then(function(data) {
-        res.json(data)
-    }) 
-    .catch(function(error) {
-        console.log('Error updating Mongo tree', error)
-        res.status(400).json({ message: 'Error updating Mongo tree' })
+        res.json(data); // Send updated tree
     })
+    .catch(function(error) {
+        console.log('Error updating Mongo tree', error);
+        res.status(400).json({ message: 'Error updating Mongo tree' });
+    });
 });
+
 
 //DELETE - DELETE routes for user, tree, branch
 // DELETE - DELETE for person

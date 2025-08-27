@@ -1,4 +1,4 @@
-import "../components/landingPage/landingPage.css";
+// import "../components/landingPage/landingPage.css";
 import Title from "../components/landingPage/Title";
 import landingPageImg from "../assets/landingPage.png";
 import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
@@ -28,13 +28,13 @@ const LandingPage = () => {
       const getOrCreateMongoUser = async () => {
         try {
           // 1. Try to find existing user
-          const res = await fetch(`http://localhost:3000/user/${user.id}`);
+          const res = await fetch(`http://localhost:5001/user/${user.id}`);
           const data = await res.json();
           console.log("User lookup:", data);
-            //this message is provided by the server if the user isn't in our database...so we create one if it's received. 
+          //this message is provided by the server if the user isn't in our database...so we create one if it's received.
           if (data.message === "User not found") {
             console.log("Creating new user in Database...");
-            const createUserRes = await fetch(`http://localhost:3000/user`, {
+            const createUserRes = await fetch(`http://localhost:5001/user`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ clerkId: user.id }),
@@ -44,7 +44,7 @@ const LandingPage = () => {
             setMongoUserId(createdUser._id);
 
             // 2. Create a tree for the new user (use freshly created Mongo ID directly)
-            const createTreeRes = await fetch(`http://localhost:3000/tree`, {
+            const createTreeRes = await fetch(`http://localhost:5001/tree`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -61,7 +61,7 @@ const LandingPage = () => {
             const createdTree = await createTreeRes.json();
             console.log("Created tree:", createdTree);
           } else {
-            // Found existing Mongo user, let's use that info. 
+            // Found existing Mongo user, let's use that info.
             setMongoUserId(data._id);
           }
         } catch (err) {
@@ -74,15 +74,15 @@ const LandingPage = () => {
   }, [isLoaded, user]);
 
   return (
-    <>
+    <div className="landingPage-container"> 
       {/* if signed out this all renders */}
       <SignedOut>
         <Header />
-        <div className="text-center mt-5">
+        <div>
           <Title />
           <h3>Every Family has a story to tell share yours on FotoTree</h3>
           <p>Please sign in to get started</p>
-          <SignInButton className="px-3 py-1 rounded-1 btn btn-primary" />
+          <SignInButton  />
           <br />
           <br />
           <div>
@@ -95,20 +95,24 @@ const LandingPage = () => {
       {/* if signed in this all renders */}
       <SignedIn afterSigninUrl="/">
         <Header />
-        <div className="text-center mt-5">
+        <div>
           <Title />
           <h3>
             The "F" is for <strong>Family</strong>
           </h3>
           <p>Hi, {firstName} let's check out your family tree!</p>
           <p>Click below to view your tree:</p>
-          <Link to="/tree" className="btn btn-success">
+          <Link to="/tree">
             See my FotoTree!
+          </Link>
+          <br />
+            <Link to="/person">
+            Add People to use in your tree!
           </Link>
           <Footer />
         </div>
       </SignedIn>
-    </>
+    </div>
   );
 };
 

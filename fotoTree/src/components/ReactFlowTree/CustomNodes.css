@@ -1,0 +1,64 @@
+/* --- Custom Node Styles --- */
+.custom-node {
+  background: #fff;
+  border: 2px solid #888;
+  border-radius: 6px;
+  padding: 12px;
+  min-width: 120px;
+  min-height: 40px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+  z-index: 2;
+}
+
+.custom-node.selected {
+  border-color: #19a74d;
+  box-shadow: 0 2px 6px rgba(10, 159, 97, 0.3);
+  z-index: 3;
+}
+
+.custom-node-label {
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+}
+
+.node-input {
+  width: 100%;
+  font-size: 14px;
+  padding: 4px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: white;
+  box-sizing: border-box;
+  z-index: 4;
+}
+
+/* --- Handles --- */
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: #7a490a;
+  border: 1px solid #fff;
+  opacity: 0.8;
+  z-index: 5;
+}
+
+.react-flow__handle:hover {
+  opacity: 1;
+  transform: scale(1.2);
+  transition: all 0.2s;
+}
+
+.react-flow,
+.react-flow__renderer,
+.react-flow__viewport,
+.react-flow__pane {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
