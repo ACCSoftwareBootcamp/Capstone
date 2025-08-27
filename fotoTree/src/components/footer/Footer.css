@@ -1,4 +1,32 @@
-/* * {
-    background-color: darkgreen;
-    color: white;
-} */
+.footer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-link {
+  text-decoration: none;
+  color: #333;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #007bff;
+}
+
+.footer-link.active {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.footer-link.disabled {
+  color: #888;
+  cursor: default;
+}
+
+.footer-bottom {
+  text-align: center;
+  color: #555;
+  font-size: 14px;
+}
