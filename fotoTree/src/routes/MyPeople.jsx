@@ -57,9 +57,9 @@ const MyPeople = () => {
       person.firstName,
       person.middleName,
       person.lastName,
-      person.suffix
+      person.suffix,
     ].filter(Boolean);
-    return parts.join(' ');
+    return parts.join(" ");
   };
 
   // Handle edit mode
@@ -70,12 +70,12 @@ const MyPeople = () => {
       lastName: selectedPerson.lastName || "",
       suffix: selectedPerson.suffix || "",
       gender: selectedPerson.gender || "",
-      birth: selectedPerson.birth ? selectedPerson.birth.split('T')[0] : "",
-      death: selectedPerson.death ? selectedPerson.death.split('T')[0] : "",
+      birth: selectedPerson.birth ? selectedPerson.birth.split("T")[0] : "",
+      death: selectedPerson.death ? selectedPerson.death.split("T")[0] : "",
       parents: selectedPerson.parents || "",
       spouseName: selectedPerson.spouseName || "",
       children: selectedPerson.children || "",
-      biography: selectedPerson.biography || ""
+      biography: selectedPerson.biography || "",
     });
     setIsEditing(true);
   };
@@ -83,41 +83,44 @@ const MyPeople = () => {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditFormData(prev => ({
+    setEditFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   // Handle save
   const handleSave = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/person/${selectedPerson._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editFormData)
-      });
+      const response = await fetch(
+        `http://localhost:5001/person/${selectedPerson._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editFormData),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to update person');
+        throw new Error("Failed to update person");
       }
 
       const updatedPerson = await response.json();
-      
+
       // Update the people array
-      setPeople(prev => prev.map(p => 
-        p._id === updatedPerson._id ? updatedPerson : p
-      ));
-      
+      setPeople((prev) =>
+        prev.map((p) => (p._id === updatedPerson._id ? updatedPerson : p))
+      );
+
       // Update selected person
       setSelectedPerson(updatedPerson);
       setIsEditing(false);
-      console.log('Person updated successfully:', updatedPerson);
+      console.log("Person updated successfully:", updatedPerson);
     } catch (error) {
-      console.error('Error updating person:', error);
-      alert('Failed to save changes. Please try again.');
+      console.error("Error updating person:", error);
+      alert("Failed to save changes. Please try again.");
     }
   };
 
@@ -134,6 +137,8 @@ const MyPeople = () => {
     padding: "24px",
     borderRight: "1px solid #ccc",
     overflowY: "auto",
+    position: "relative",
+    textAlign: "center", // center heading, photo, buttons
   };
   const listStyle = {
     width: "25%",
@@ -146,7 +151,8 @@ const MyPeople = () => {
     height: "200px",
     objectFit: "cover",
     borderRadius: "8px",
-    marginBottom: "16px",
+    margin: "16px auto",
+    display: "block",
   };
   const listItemStyle = (isSelected) => ({
     cursor: "pointer",
@@ -156,36 +162,65 @@ const MyPeople = () => {
     marginBottom: "4px",
   });
   const hoverStyle = { backgroundColor: "#e0e0e0" };
-  const fieldStyle = { marginBottom: "12px", lineHeight: "1.5" };
-  const inputStyle = { 
-    width: "100%", 
-    padding: "6px", 
-    border: "1px solid #ccc", 
-    borderRadius: "4px",
-    fontSize: "14px"
+
+  // --- NEW: Fields grid places gutter at true center (col 2) ---
+  const fieldsGridStyle = {
+    display: "grid",
+    gridTemplateColumns: "1fr 42px 1fr", // left column, centered gutter, right column
+    alignItems: "center",
+    rowGap: "12px",
+    width: "100%",
+    maxWidth: "720px",
+    margin: "0 auto", // center whole grid under photo
   };
+
+  const labelCellStyle = {
+    gridColumn: "1",
+    textAlign: "right",
+    fontWeight: "bold",
+  };
+
+  const valueCellStyle = {
+    gridColumn: "3",
+    textAlign: "left",
+  };
+
+  // Inputs/selects take full width of their cell (so Gender matches)
+  const inputStyle = {
+    width: "100%",
+    padding: "6px",
+    border: "1px solid #ccc",
+    borderRadius: "4px",
+    fontSize: "18px",
+  };
+
   const buttonStyle = {
-    padding: "8px 16px",
+    padding: "6px 12px",
     margin: "4px",
     border: "none",
     borderRadius: "4px",
     cursor: "pointer",
-    fontSize: "14px"
+    fontSize: "18px",
   };
   const editButtonStyle = {
     ...buttonStyle,
     backgroundColor: "#007bff",
-    color: "white"
+    color: "white",
+    position: "absolute",
+    top: "10px",
+    right: "10px",
+    fontSize: "14px", // smaller than full name
+    padding: "4px 10px",
   };
   const saveButtonStyle = {
     ...buttonStyle,
     backgroundColor: "#28a745",
-    color: "white"
+    color: "white",
   };
   const cancelButtonStyle = {
     ...buttonStyle,
     backgroundColor: "#6c757d",
-    color: "white"
+    color: "white",
   };
 
   return (
@@ -194,21 +229,32 @@ const MyPeople = () => {
       <div style={profileStyle}>
         {selectedPerson ? (
           <>
+            {/* Full name centered */}
+            <h2
+              style={{
+                fontSize: "28px",
+                fontWeight: "bold",
+                margin: "0 0 8px",
+              }}
+            >
+              {isEditing
+                ? getFullName(editFormData)
+                : getFullName(selectedPerson)}
+            </h2>
+
+            {/* Edit button in top-right corner */}
+            {!isEditing && (
+              <button onClick={handleEdit} style={editButtonStyle}>
+                Edit
+              </button>
+            )}
+
+            {/* Photo below name */}
             <img
               src={selectedPerson.photoArray?.[0]}
               alt="profile"
               style={profileImgStyle}
             />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-              <h2 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>
-                {isEditing ? getFullName(editFormData) : getFullName(selectedPerson)}
-              </h2>
-              {!isEditing && (
-                <button onClick={handleEdit} style={editButtonStyle}>
-                  Edit
-                </button>
-              )}
-            </div>
 
             {/* Save/Cancel buttons (only show when editing) */}
             {isEditing && (
@@ -221,10 +267,12 @@ const MyPeople = () => {
                 </button>
               </div>
             )}
-            
-            <div style={fieldStyle}>
-              <strong>First Name:</strong> {
-                isEditing ? (
+
+            {/* --- Fields (grid: labels right, values left, center gutter) --- */}
+            <div style={fieldsGridStyle}>
+              <div style={labelCellStyle}>First Name:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="text"
                     name="firstName"
@@ -234,13 +282,12 @@ const MyPeople = () => {
                   />
                 ) : (
                   selectedPerson.firstName || "N/A"
-                )
-              }
-            </div>
-            
-            <div style={fieldStyle}>
-              <strong>Middle Name:</strong> {
-                isEditing ? (
+                )}
+              </div>
+
+              <div style={labelCellStyle}>Middle Name:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="text"
                     name="middleName"
@@ -250,13 +297,12 @@ const MyPeople = () => {
                   />
                 ) : (
                   selectedPerson.middleName || "N/A"
-                )
-              }
-            </div>
-            
-            <div style={fieldStyle}>
-              <strong>Last Name:</strong> {
-                isEditing ? (
+                )}
+              </div>
+
+              <div style={labelCellStyle}>Last Name:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="text"
                     name="lastName"
@@ -266,13 +312,12 @@ const MyPeople = () => {
                   />
                 ) : (
                   selectedPerson.lastName || "N/A"
-                )
-              }
-            </div>
-            
-            <div style={fieldStyle}>
-              <strong>Suffix:</strong> {
-                isEditing ? (
+                )}
+              </div>
+
+              <div style={labelCellStyle}>Suffix:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="text"
                     name="suffix"
@@ -282,33 +327,31 @@ const MyPeople = () => {
                   />
                 ) : (
                   selectedPerson.suffix || "N/A"
-                )
-              }
-            </div>
-            
-            <div style={fieldStyle}>
-              <strong>Gender:</strong> {
-                isEditing ? (
+                )}
+              </div>
+
+              <div style={labelCellStyle}>Gender:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <select
                     name="gender"
                     value={editFormData.gender}
                     onChange={handleInputChange}
-                    style={inputStyle}
+                    style={inputStyle} // same width as inputs
                   >
                     <option value="">Select...</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 ) : (
                   selectedPerson.gender || "N/A"
-                )
-              }
-            </div>
-            
-            <div style={fieldStyle}>
-              <strong>Birth Date:</strong> {
-                isEditing ? (
+                )}
+              </div>
+
+              <div style={labelCellStyle}>Birth Date:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="date"
                     name="birth"
@@ -316,15 +359,16 @@ const MyPeople = () => {
                     onChange={handleInputChange}
                     style={inputStyle}
                   />
+                ) : selectedPerson.birth ? (
+                  new Date(selectedPerson.birth).toLocaleDateString()
                 ) : (
-                  selectedPerson.birth ? new Date(selectedPerson.birth).toLocaleDateString() : "N/A"
-                )
-              }
-            </div>
-            
-            <div style={fieldStyle}>
-              <strong>Death Date:</strong> {
-                isEditing ? (
+                  "N/A"
+                )}
+              </div>
+
+              <div style={labelCellStyle}>Death Date:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="date"
                     name="death"
@@ -332,15 +376,16 @@ const MyPeople = () => {
                     onChange={handleInputChange}
                     style={inputStyle}
                   />
+                ) : selectedPerson.death ? (
+                  new Date(selectedPerson.death).toLocaleDateString()
                 ) : (
-                  selectedPerson.death ? new Date(selectedPerson.death).toLocaleDateString() : "N/A"
-                )
-              }
-            </div>
+                  "N/A"
+                )}
+              </div>
 
-            <div style={fieldStyle}>
-              <strong>Parents:</strong> {
-                isEditing ? (
+              <div style={labelCellStyle}>Parents:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="text"
                     name="parents"
@@ -350,13 +395,12 @@ const MyPeople = () => {
                   />
                 ) : (
                   selectedPerson.parents || "N/A"
-                )
-              }
-            </div>
+                )}
+              </div>
 
-            <div style={fieldStyle}>
-              <strong>Spouse:</strong> {
-                isEditing ? (
+              <div style={labelCellStyle}>Spouse:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="text"
                     name="spouseName"
@@ -366,13 +410,12 @@ const MyPeople = () => {
                   />
                 ) : (
                   selectedPerson.spouseName || "N/A"
-                )
-              }
-            </div>
+                )}
+              </div>
 
-            <div style={fieldStyle}>
-              <strong>Children:</strong> {
-                isEditing ? (
+              <div style={labelCellStyle}>Children:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <input
                     type="text"
                     name="children"
@@ -382,24 +425,23 @@ const MyPeople = () => {
                   />
                 ) : (
                   selectedPerson.children || "N/A"
-                )
-              }
-            </div>
-            
-            <div style={fieldStyle}>
-              <strong>Bio:</strong> {
-                isEditing ? (
+                )}
+              </div>
+
+              <div style={labelCellStyle}>Bio:</div>
+              <div style={valueCellStyle}>
+                {isEditing ? (
                   <textarea
                     name="biography"
                     value={editFormData.biography}
                     onChange={handleInputChange}
-                    style={{...inputStyle, height: "80px"}}
+                    style={{ ...inputStyle, height: "80px" }}
                     rows={4}
                   />
                 ) : (
                   selectedPerson.biography || "No bio available"
-                )
-              }
+                )}
+              </div>
             </div>
           </>
         ) : (
@@ -409,15 +451,30 @@ const MyPeople = () => {
 
       {/* Right side people list */}
       <div style={listStyle}>
-        <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "8px" }}>All People</h3>
+        <h3
+          style={{
+            fontSize: "24px",
+            fontWeight: "600",
+            marginBottom: "8px",
+          }}
+        >
+          All People
+        </h3>
+        <hr />
         <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
           {people.map((p) => (
             <li
               key={p._id}
               onClick={() => setSelectedPerson(p)}
               style={listItemStyle(selectedPerson?._id === p._id)}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor)}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = selectedPerson?._id === p._id ? "#d3d3d3" : "transparent")}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor =
+                  hoverStyle.backgroundColor)
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor =
+                  selectedPerson?._id === p._id ? "#d3d3d3" : "transparent")
+              }
             >
               {getFullName(p)}
             </li>
