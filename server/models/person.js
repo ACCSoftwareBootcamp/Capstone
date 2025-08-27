@@ -38,7 +38,7 @@ const personSchema = new Schema(
       ref: 'person'
     }],
     biography: String,
-    photoUrl: String,
+    photoArray: Array,
     creator: {
       type: Schema.Types.ObjectId,
       ref: 'user',
