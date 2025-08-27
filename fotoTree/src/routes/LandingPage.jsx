@@ -74,7 +74,7 @@ const LandingPage = () => {
   }, [isLoaded, user]);
 
   return (
-    <div className="landingPage-container"> 
+    <div className="landingPage-container">
       {/* if signed out this all renders */}
       <SignedOut>
         <Header />
@@ -82,7 +82,7 @@ const LandingPage = () => {
           <Title />
           <h3>Every Family has a story to tell share yours on FotoTree</h3>
           <p>Please sign in to get started</p>
-          <SignInButton  />
+          <SignInButton />
           <br />
           <br />
           <div>
@@ -102,13 +102,11 @@ const LandingPage = () => {
           </h3>
           <p>Hi, {firstName} let's check out your family tree!</p>
           <p>Click below to view your tree:</p>
-          <Link to="/tree">
-            See my FotoTree!
-          </Link>
+          <Link to="/tree">See my FotoTree!</Link>
           <br />
-            <Link to="/person">
-            Add People to use in your tree!
-          </Link>
+          <Link to="/person">Add People to use in your tree!</Link>
+          <br />
+          <Link to="/people">See my family members!</Link>
           <Footer />
         </div>
       </SignedIn>
