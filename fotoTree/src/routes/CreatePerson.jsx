@@ -9,7 +9,6 @@ import { useUser } from "@clerk/clerk-react";
 const CreatePerson = () => {
   //clerk id to get treeId for submission and relating the person to a particular tree
   const { user, isLoaded } = useUser();
-
   const [treeId, setTreeId] = useState("");
   const [mongoUser, setMongoUser] = useState("");
 
@@ -108,12 +107,13 @@ const CreatePerson = () => {
         lastName: "",
         birthDate: "",
         // deathDate: "",
-        // gender: "",
+        gender: "",
         // momId: "",
         // dadId: "",
         partnerId: "",
         // childId: "",
         bio: "",
+        image: "",
       });
     } catch (err) {
       console.error("Error creating person:", err);
@@ -130,7 +130,7 @@ const CreatePerson = () => {
 
   // handles references when user selects a file
   const handleFileChange = (event) => {
-    console.log(event.target.file)
+    console.log(event.target.file);
     // get a ref to the file selected by user
     const selectedFile = event.target.files[0];
     // save to state
@@ -159,9 +159,10 @@ const CreatePerson = () => {
         method: "POST",
         body: formData,
       });
+      console.log("CreatePerson.jsx: response: ", response);
 
       // check for ok
-      if (!response.ok) throw new Error("File upload failed");
+      // if (!response.ok) throw new Error("File upload failed");
 
       // parse the response
       const result = await response.json();
@@ -247,60 +248,15 @@ const CreatePerson = () => {
           </select>
         </div>
 
-        {/* <div className="form-group">
-          <label htmlFor="momId">Mother</label>
-          <select
-            name="momId"
-            id="momId"
-            value={formData.momId}
-            onChange={handleChange}
-          >
-            <option value="">None</option>
-            <option value="mom">Mother</option>
-          </select>
-        </div>
-
         <div className="form-group">
-          <label htmlFor="dadId">Father</label>
-          <select
-            name="dadId"
-            id="dadId"
-            value={formData.dadId}
+          <label htmlFor="bio">Biography</label>
+          <textarea
+            name="bio"
+            id="bio"
+            value={formData.bio}
             onChange={handleChange}
-          >
-            <option value="">None</option>
-            <option value="dad">Father</option>
-          </select>
+          ></textarea>
         </div>
-
-        <div className="form-group">
-          <label htmlFor="partnerId">Partner</label>
-          <select
-            name="partnerId"
-            id="partnerId"
-            value={formData.partnerId}
-            onChange={handleChange}
-          >
-            <option value="">None</option>
-            <option value="husband">Husband</option>
-            <option value="wife">Wife</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="childId">Children</label>
-          <select
-            name="childId"
-            id="childId"
-            value={formData.childId}
-            onChange={handleChange}
-          >
-            <option value="">None</option>
-            <option value="son">Son</option>
-            <option value="daughter">Daughter</option>
-          </select>
-        </div> */}
 
         <div
           style={{
@@ -317,36 +273,30 @@ const CreatePerson = () => {
             ref={fileInputRef}
             onChange={handleFileChange}
           />
-          <button onClick={handleUpload}>Upload</button>
+          {/* <button onClick={handleUpload}>Add Person</button> */}
         </div>
 
         {/* Display the uploaded image if available */}
         {savedImage && (
           <div>
-            <h3>Uploaded Image:</h3>
+            <h3>Uploaded Image</h3>
+
             <img
+              htmlFor="image"
+              id="image"
               style={{ maxWidth: "40%" }}
               src={savedImage}
               alt="Uploaded image"
             />
           </div>
         )}
-        <br />
-        <div className="form-group">
-          <label htmlFor="bio">Biography</label>
-          <textarea
-            name="bio"
-            id="bio"
-            value={formData.bio}
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        <div className="form-group">
-          <button type="submit">Add Person</button>
-        </div>
       </form>
       <br />
+      <div className="form-group">
+        <button onClick={handleUpload} type="submit">
+          Add Person
+        </button>
+      </div>
 
       <Footer />
     </>
