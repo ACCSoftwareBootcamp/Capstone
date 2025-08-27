@@ -3,8 +3,9 @@ import { Handle, Position } from '@xyflow/react';
 import './CustomNodes.css';
 
 const CustomNode = ({ id, data, selected }) => {
+  const isGenericLabel = data.label?.startsWith('Node n');
+  const [label, setLabel] = useState(isGenericLabel ? '' : data.label || '');
   const [isEditing, setIsEditing] = useState(false);
-  const [label, setLabel] = useState(data.label || '');
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [hoveredIndex, setHoveredIndex] = useState(-1);
@@ -23,7 +24,6 @@ const CustomNode = ({ id, data, selected }) => {
     setIsEditing(true);
     setShowDropdown(true);
     setHoveredIndex(-1);
-    setHighlightedIndex(-1); // remove auto-highlight
   };
 
   const commitLabel = (newLabel) => {
@@ -37,7 +37,6 @@ const CustomNode = ({ id, data, selected }) => {
       setShowDropdown(false);
       commitLabel(label);
       setHoveredIndex(-1);
-      setHighlightedIndex(-1);
     }
   };
 
@@ -45,7 +44,6 @@ const CustomNode = ({ id, data, selected }) => {
     setLabel(e.target.value);
     setShowDropdown(true);
     setHoveredIndex(-1);
-    setHighlightedIndex(-1); // remove auto-highlight
   };
 
   const selectPerson = (fullName) => {
@@ -57,32 +55,28 @@ const CustomNode = ({ id, data, selected }) => {
   };
 
   const handleKeyDown = (e) => {
-    if (showDropdown && filteredPeople.length > 0) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setHighlightedIndex((prev) => (prev + 1) % filteredPeople.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setHighlightedIndex((prev) => (prev - 1 + filteredPeople.length) % filteredPeople.length);
-      } else if (e.key === 'Tab') {
-        const selected = highlightedIndex >= 0 ? filteredPeople[highlightedIndex] : null;
-        if (selected) {
-          e.preventDefault();
-          selectPerson(`${selected.firstName} ${selected.lastName}`);
-        }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setShowDropdown(false);
-        setHighlightedIndex(-1);
-        setHoveredIndex(-1);
-      }
-    }
+    if (!showDropdown || filteredPeople.length === 0) return;
 
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
+      setHighlightedIndex((prev) => (prev + 1) % filteredPeople.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => (prev - 1 + filteredPeople.length) % filteredPeople.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const exactMatch = filteredPeople.find(
+        (p) => `${p.firstName} ${p.lastName}`.toLowerCase() === label.toLowerCase()
+      );
+      if (exactMatch) selectPerson(`${exactMatch.firstName} ${exactMatch.lastName}`);
+      else commitLabel(label);
       setIsEditing(false);
       setShowDropdown(false);
-      commitLabel(label); // commit exactly what's in the input
+      setHighlightedIndex(-1);
+      setHoveredIndex(-1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setShowDropdown(false);
       setHighlightedIndex(-1);
       setHoveredIndex(-1);
     }
@@ -93,7 +87,10 @@ const CustomNode = ({ id, data, selected }) => {
   }, [isEditing]);
 
   return (
-    <div className={`custom-node ${selected ? 'selected' : ''}`}>
+    <div
+      className={`custom-node ${selected ? 'selected' : ''}`}
+      onDoubleClick={startEditing} // entire node is double-clickable
+    >
       {/* Handles */}
       <Handle type="target" position={Position.Top} id="top" style={{ top: -8, left: '50%', transform: 'translateX(-50%)' }} />
       <Handle type="source" position={Position.Top} id="top" style={{ top: -8, left: '50%', transform: 'translateX(-50%)' }} />
@@ -118,7 +115,6 @@ const CustomNode = ({ id, data, selected }) => {
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             onFocus={() => setShowDropdown(true)}
-            onWheel={(e) => e.stopPropagation()}
             style={{ flex: 1, boxSizing: 'border-box' }}
           />
 
@@ -139,7 +135,6 @@ const CustomNode = ({ id, data, selected }) => {
                 overflowY: 'auto',
               }}
               onMouseDown={(e) => e.stopPropagation()}
-              onWheel={(e) => e.stopPropagation()}
             >
               {filteredPeople.length > 0 ? (
                 filteredPeople.map((p, index) => {
@@ -170,7 +165,7 @@ const CustomNode = ({ id, data, selected }) => {
           )}
         </div>
       ) : (
-        <div onDoubleClick={startEditing}>{label}</div>
+        <div>{isGenericLabel && !label ? '' : label}</div>
       )}
     </div>
   );
