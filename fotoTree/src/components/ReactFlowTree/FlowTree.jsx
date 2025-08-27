@@ -48,7 +48,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     if (!mongoId) return;
     const fetchPeople = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/person?creator=${mongoId}`);
+        const res = await fetch(`http://localhost:5001/person?creator=${mongoId}`);
         if (!res.ok) throw new Error("Failed to fetch people");
         const data = await res.json();
         setPeople(data);
@@ -192,7 +192,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     };
 
     try {
-      const res = await fetch(`http://localhost:5000/tree/${treeId}`, {
+      const res = await fetch(`http://localhost:5001/tree/${treeId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(flowData),

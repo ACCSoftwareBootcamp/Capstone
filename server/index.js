@@ -40,7 +40,8 @@ app.use(logger('dev'))
 // middleware - I want to add the ability to read req.body
 app.use(express.json())
 // example: '{"description": 'Climb Mt. Fuji'}
-app.use(express.urlencoded())
+//extended true to avoid issues with nested objects
+app.use(express.urlencoded({ extended: true }))
 // open the uploads folder so we can read it 
 app.use(express.static(__dirname + '/uploads/'))
 
