@@ -1,9 +1,9 @@
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 //import routes
 import LandingPage from "./routes/LandingPage";
 import Tree from "./routes/Tree"
 import CreatePerson from "./routes/CreatePerson"; 
+import MyPeople from "./routes/MyPeople";
 
 
 
@@ -18,6 +18,7 @@ import {
 //import necessary components from react-router stuff
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
+
 function App() {
   
   return (
@@ -27,6 +28,8 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/tree" element= {< Tree />} />
         <Route path="/person" element= {< CreatePerson />} />
+        <Route path="/people" element= {< MyPeople />} />
+        
 
         </Routes>
       </Router>

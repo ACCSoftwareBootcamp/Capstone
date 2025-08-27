@@ -4,76 +4,82 @@ import './CustomNodes.css';
 
 const CustomNode = ({ id, data, selected }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [label, setLabel] = useState(data.label || '');
+  const initialLabel =
+    data.label && data.label.startsWith('Node n') ? '' : data.label || '';
+  const [label, setLabel] = useState(initialLabel);
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [hoveredIndex, setHoveredIndex] = useState(-1);
 
   const inputRef = useRef(null);
-
-  const handleDoubleClick = () => {
-    setIsEditing(true);
-    setShowDropdown(true);
-    setHighlightedIndex(-1);
-  };
-
-  const handleBlur = () => {
-    if (isEditing) {
-      setIsEditing(false);
-      setShowDropdown(false);
-      if (data.onChange) data.onChange(id, label);
-    }
-  };
-
-  const handleChange = (e) => {
-    setLabel(e.target.value);
-    setShowDropdown(true);
-    setHighlightedIndex(-1);
-  };
-
-  const handlePersonClick = (fullName) => {
-    setLabel(fullName);
-    if (data.onChange) data.onChange(id, fullName);
-    setIsEditing(false);
-    setShowDropdown(false);
-    setHighlightedIndex(-1);
-  };
+  const dropdownRef = useRef(null);
 
   const list = data.people || [];
   const filteredPeople = label
     ? list.filter((p) =>
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(label.toLowerCase())
       )
-    : list; // show all when empty
+    : list;
+
+  const startEditing = () => {
+    setIsEditing(true);
+    setShowDropdown(true);
+    setHoveredIndex(-1);
+  };
+
+  const commitLabel = (newLabel) => {
+    setLabel(newLabel);
+    if (data.onChange) data.onChange(id, newLabel);
+  };
+
+  const handleBlur = (e) => {
+    if (!dropdownRef.current?.contains(e.relatedTarget)) {
+      setIsEditing(false);
+      setShowDropdown(false);
+      commitLabel(label);
+      setHoveredIndex(-1);
+      setHighlightedIndex(-1);
+    }
+  };
+
+  const handleChange = (e) => {
+    setLabel(e.target.value);
+    setShowDropdown(true);
+    setHoveredIndex(-1);
+    setHighlightedIndex(-1);
+  };
+
+  const selectPerson = (fullName) => {
+    commitLabel(fullName);
+    setIsEditing(false);
+    setShowDropdown(false);
+    setHoveredIndex(-1);
+    setHighlightedIndex(-1);
+  };
 
   const handleKeyDown = (e) => {
-    if (!showDropdown || filteredPeople.length === 0) return;
+    if (!showDropdown) return;
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown' && filteredPeople.length > 0) {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev + 1) % filteredPeople.length);
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowUp' && filteredPeople.length > 0) {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev - 1 + filteredPeople.length) % filteredPeople.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (highlightedIndex >= 0 && filteredPeople[highlightedIndex]) {
-        const p = filteredPeople[highlightedIndex];
-        handlePersonClick(`${p.firstName} ${p.lastName}`);
-      } else {
-        setIsEditing(false);
-        setShowDropdown(false);
-        if (data.onChange) data.onChange(id, label);
-      }
-    } else if (e.key === 'Tab') {
-      if (filteredPeople.length > 0) {
-        e.preventDefault();
-        const p = highlightedIndex >= 0 ? filteredPeople[highlightedIndex] : filteredPeople[0];
-        handlePersonClick(`${p.firstName} ${p.lastName}`);
-      }
+      // Only commit what is typed in the box, ignore highlighted
+      commitLabel(label);
+      setIsEditing(false);
+      setShowDropdown(false);
+      setHighlightedIndex(-1);
+      setHoveredIndex(-1);
     } else if (e.key === 'Escape') {
       e.preventDefault();
       setShowDropdown(false);
+      setIsEditing(false);
       setHighlightedIndex(-1);
+      setHoveredIndex(-1);
     }
   };
 
@@ -84,7 +90,7 @@ const CustomNode = ({ id, data, selected }) => {
   return (
     <div
       className={`custom-node ${selected ? 'selected' : ''}`}
-      onDoubleClick={handleDoubleClick}
+      onDoubleClick={startEditing}
     >
       {/* Handles */}
       <Handle type="target" position={Position.Top} id="top" style={{ top: -8, left: '50%', transform: 'translateX(-50%)' }} />
@@ -100,7 +106,7 @@ const CustomNode = ({ id, data, selected }) => {
       {isEditing ? (
         <div
           style={{ display: 'flex', flexDirection: 'column', gap: '4px', position: 'relative' }}
-          onMouseDown={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
         >
           <input
             ref={inputRef}
@@ -109,11 +115,14 @@ const CustomNode = ({ id, data, selected }) => {
             onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
+            onFocus={() => setShowDropdown(true)}
+        
             style={{ flex: 1, boxSizing: 'border-box' }}
           />
 
           {showDropdown && (
             <div
+              ref={dropdownRef}
               tabIndex={-1}
               style={{
                 border: '1px solid #ccc',
@@ -125,23 +134,27 @@ const CustomNode = ({ id, data, selected }) => {
                 right: 0,
                 zIndex: 10,
                 maxHeight: 150,
-                overflowY: 'auto'
+                overflowY: 'auto',
               }}
-              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onMouseDown={(e) => e.stopPropagation()}
+
             >
               {filteredPeople.length > 0 ? (
                 filteredPeople.map((p, index) => {
                   const fullName = `${p.firstName} ${p.lastName}`;
-                  const isActive = index === highlightedIndex;
+                  const isActive = index === highlightedIndex || index === hoveredIndex;
                   return (
                     <div
                       key={p._id}
                       tabIndex={-1}
-                      onClick={() => handlePersonClick(fullName)}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(-1)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => selectPerson(fullName)}
                       style={{
                         padding: '4px 8px',
                         cursor: 'pointer',
-                        background: isActive ? '#eee' : 'transparent'
+                        background: isActive ? '#eee' : 'transparent',
                       }}
                     >
                       {fullName}
@@ -149,15 +162,13 @@ const CustomNode = ({ id, data, selected }) => {
                   );
                 })
               ) : (
-                <div style={{ padding: '4px 8px', color: '#888' }}>
-                  No matches found
-                </div>
+                <div style={{ padding: '4px 8px', color: '#888' }}>No matches found</div>
               )}
             </div>
           )}
         </div>
       ) : (
-        <div>{label}</div>
+        <div>{label || <span style={{ color: '#888' }}>Double-click to edit</span>}</div>
       )}
     </div>
   );
