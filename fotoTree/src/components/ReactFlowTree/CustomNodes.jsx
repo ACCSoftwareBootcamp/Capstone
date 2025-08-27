@@ -19,19 +19,11 @@ const CustomNode = ({ id, data, selected }) => {
       )
     : list;
 
-  // auto highlight first match
-  useEffect(() => {
-    if (showDropdown && filteredPeople.length > 0) {
-      setHighlightedIndex(0);
-    } else {
-      setHighlightedIndex(-1);
-    }
-  }, [filteredPeople, showDropdown]);
-
   const startEditing = () => {
     setIsEditing(true);
     setShowDropdown(true);
     setHoveredIndex(-1);
+    setHighlightedIndex(-1); // remove auto-highlight
   };
 
   const commitLabel = (newLabel) => {
@@ -45,6 +37,7 @@ const CustomNode = ({ id, data, selected }) => {
       setShowDropdown(false);
       commitLabel(label);
       setHoveredIndex(-1);
+      setHighlightedIndex(-1);
     }
   };
 
@@ -52,6 +45,7 @@ const CustomNode = ({ id, data, selected }) => {
     setLabel(e.target.value);
     setShowDropdown(true);
     setHoveredIndex(-1);
+    setHighlightedIndex(-1); // remove auto-highlight
   };
 
   const selectPerson = (fullName) => {
@@ -63,27 +57,32 @@ const CustomNode = ({ id, data, selected }) => {
   };
 
   const handleKeyDown = (e) => {
-    if (!showDropdown || filteredPeople.length === 0) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setHighlightedIndex((prev) => (prev + 1) % filteredPeople.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlightedIndex((prev) => (prev - 1 + filteredPeople.length) % filteredPeople.length);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      const selected = highlightedIndex >= 0 ? filteredPeople[highlightedIndex] : filteredPeople[0];
-      if (selected) selectPerson(`${selected.firstName} ${selected.lastName}`);
-    } else if (e.key === 'Tab') {
-      const selected = highlightedIndex >= 0 ? filteredPeople[highlightedIndex] : filteredPeople[0];
-      if (selected) {
+    if (showDropdown && filteredPeople.length > 0) {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
-        selectPerson(`${selected.firstName} ${selected.lastName}`);
+        setHighlightedIndex((prev) => (prev + 1) % filteredPeople.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + filteredPeople.length) % filteredPeople.length);
+      } else if (e.key === 'Tab') {
+        const selected = highlightedIndex >= 0 ? filteredPeople[highlightedIndex] : null;
+        if (selected) {
+          e.preventDefault();
+          selectPerson(`${selected.firstName} ${selected.lastName}`);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowDropdown(false);
+        setHighlightedIndex(-1);
+        setHoveredIndex(-1);
       }
-    } else if (e.key === 'Escape') {
+    }
+
+    if (e.key === 'Enter') {
       e.preventDefault();
+      setIsEditing(false);
       setShowDropdown(false);
+      commitLabel(label); // commit exactly what's in the input
       setHighlightedIndex(-1);
       setHoveredIndex(-1);
     }

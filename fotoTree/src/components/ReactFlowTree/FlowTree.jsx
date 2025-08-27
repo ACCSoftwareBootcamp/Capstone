@@ -122,7 +122,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
   const onConnect = useCallback(
     (params) => {
       setEdges((eds) =>
-        addEdge({ ...params, type: "straight" }, eds) 
+        addEdge({ ...params, type: "straight" }, eds)
       );
     },
     [setEdges]
@@ -153,7 +153,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
       const { clientX, clientY } =
         "changedTouches" in event ? event.changedTouches[0] : event;
 
-        //round to our grid
+      //round to our grid
       let position = screenToFlowPosition({ x: clientX, y: clientY });
       const snap = (val, g = 20) => Math.round(val / g) * g;
       position = { x: snap(position.x), y: snap(position.y) };
@@ -223,6 +223,21 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     }
   }, [nodes, edges, treeId]);
 
+  // used to filter out existing labels
+  const usedLabels = nodes.map((n) => n.data.label);
+
+  const nodesWithFilteredPeople = nodes.map((n) => ({
+    ...n,
+    data: {
+      ...n.data,
+      people: people.filter(
+        (p) =>
+          !usedLabels.includes(`${p.firstName} ${p.lastName}`) ||
+          `${p.firstName} ${p.lastName}` === n.data.label
+      ),
+    },
+  }));
+
   return (
     <div
       className="wrapper"
@@ -231,7 +246,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     >
       <ReactFlow
         nodeTypes={nodeTypes}
-        nodes={nodes}
+        nodes={nodesWithFilteredPeople}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
