@@ -11,6 +11,8 @@ const MyPeople = () => {
   const [editFormData, setEditFormData] = useState({});
   const [newFile, setNewFile] = useState(null);
   const [isSaving, setIsSaving] = useState(false); // Loading state for save operation
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Delete confirmation dialog
+  const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete operation
 
   // Fetch mongo user id
   useEffect(() => {
@@ -140,7 +142,8 @@ const MyPeople = () => {
         const uploadResult = await uploadRes.json();
         console.log("Upload response:", uploadResult);
         
-        const { imageUrl } = uploadResult;
+        // The server returns the saved image document with imageUrl property
+        const imageUrl = uploadResult.imageUrl;
         console.log("Setting photoArray to:", [imageUrl]);
         updatedPhotoArray = [imageUrl];
       }
@@ -183,6 +186,62 @@ const MyPeople = () => {
     setIsEditing(false);
     setEditFormData({});
     setNewFile(null);
+  };
+
+  // Handle delete confirmation
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  // Handle delete confirmation cancel
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+  };
+
+  // Handle delete person
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      // First delete photo if it exists
+      if (selectedPerson.photoArray?.length > 0) {
+        const photoUrl = selectedPerson.photoArray[0];
+        console.log("Deleting photo:", photoUrl);
+        
+        const photoDeleteRes = await fetch(
+          `http://localhost:5001/person/${selectedPerson._id}/photo/${encodeURIComponent(photoUrl)}`,
+          { method: "DELETE" }
+        );
+        
+        if (!photoDeleteRes.ok) {
+          console.warn("Failed to delete photo, continuing with person deletion");
+        }
+      }
+
+      // Delete the person
+      const personDeleteRes = await fetch(
+        `http://localhost:5001/person/${selectedPerson._id}`,
+        { method: "DELETE" }
+      );
+
+      if (!personDeleteRes.ok) throw new Error("Failed to delete person");
+
+      // Update local state
+      setPeople(prev => prev.filter(p => p._id !== selectedPerson._id));
+      
+      // Select next person or clear selection
+      const remainingPeople = people.filter(p => p._id !== selectedPerson._id);
+      setSelectedPerson(remainingPeople.length > 0 ? remainingPeople[0] : null);
+      
+      setShowDeleteConfirm(false);
+      console.log("Person deleted successfully");
+      alert("Person deleted successfully");
+      
+    } catch (error) {
+      console.error("Error deleting person:", error);
+      alert("Failed to delete person. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Get current display image
@@ -273,6 +332,50 @@ const MyPeople = () => {
     cursor: isSaving ? "not-allowed" : "pointer"
   };
   const cancelButtonStyle = { ...buttonStyle, backgroundColor: "#6c757d", color: "white" };
+  const deleteButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: "#dc3545",
+    color: "white",
+    position: "absolute",
+    top: "10px",
+    right: "60px", // Position to the left of edit button
+    fontSize: "14px",
+    padding: "4px 10px",
+  };
+  const confirmDeleteButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: isDeleting ? "#6c757d" : "#dc3545",
+    color: "white",
+    cursor: isDeleting ? "not-allowed" : "pointer"
+  };
+  const cancelDeleteButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: "#6c757d",
+    color: "white",
+    cursor: isDeleting ? "not-allowed" : "pointer",
+    opacity: isDeleting ? 0.6 : 1
+  };
+  const modalOverlayStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000
+  };
+  const modalContentStyle = {
+    backgroundColor: "white",
+    padding: "24px",
+    borderRadius: "8px",
+    maxWidth: "400px",
+    width: "90%",
+    textAlign: "center",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)"
+  };
 
   return (
     <div style={containerStyle}>
@@ -284,9 +387,14 @@ const MyPeople = () => {
               {isEditing ? getFullName(editFormData) : getFullName(selectedPerson)}
             </h2>
             {!isEditing && (
-              <button onClick={handleEdit} style={editButtonStyle}>
-                Edit
-              </button>
+              <>
+                <button onClick={handleEdit} style={editButtonStyle}>
+                  Edit
+                </button>
+                <button onClick={handleDeleteClick} style={deleteButtonStyle}>
+                  🗑️
+                </button>
+              </>
             )}
             <img
               src={isEditing ? getCurrentDisplayImage() : selectedPerson.photoArray?.[0]}
@@ -468,6 +576,34 @@ const MyPeople = () => {
           ))}
         </ul>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3 style={{ marginBottom: "16px", color: "#dc3545" }}>Delete Person</h3>
+            <p style={{ marginBottom: "24px", lineHeight: "1.5" }}>
+              Are you sure you want to delete this person? This will delete all data and cannot be reversed.
+            </p>
+            <div>
+              <button 
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                style={confirmDeleteButtonStyle}
+              >
+                {isDeleting ? "Deleting..." : "Confirm"}
+              </button>
+              <button 
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+                style={cancelDeleteButtonStyle}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
