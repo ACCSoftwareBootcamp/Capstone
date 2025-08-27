@@ -1,5 +1,5 @@
 // imports dotenv and runs it, reading the .env file
-require('dotenv').config()
+require('dotenv').config({ path: '.env' });
 // import mongoose
 const mongoose = require('mongoose')
 
@@ -7,7 +7,7 @@ const mongoose = require('mongoose')
 const {URI, MONGO_USER, MONGO_PASSWORD, MONGO_DB, MONGO_PORT, MONGO_HOST} = process.env; 
 
 // Build the connection string
-//const URL=`mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=admin`
+// const URL=`mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB}?authSource=admin`
 const URL=`${URI}/${MONGO_DB}`;
 // console.log('URL is: ', URL); 
 
@@ -17,7 +17,6 @@ const connObj = {
     pass: MONGO_PASSWORD
 }
 
-
 //connect to db using these properties - actually connect to mongo
 mongoose.connect(URL, connObj) 
     .then(function(){
@@ -26,3 +25,5 @@ mongoose.connect(URL, connObj)
     .catch(function(error){
         console.log('MongoDB connection failed', error)
     })
+
+    

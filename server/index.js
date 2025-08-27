@@ -3,12 +3,16 @@ const express = require('express')
 //create an instance of express
 const app = express()
 //establish port for listening
-const PORT=process.env.PORT || 5000
+const PORT=process.env.PORT || 5001
 //use a logger to track requests
 const logger= require('morgan')
-
 const morgan = require('morgan');
-const dotenv = require('dotenv');
+
+//use dotenv to read .env file
+const dotenv = require('dotenv').config({ path: './.env' });
+//import cloudinary to upload files
+const cloudinary = require('./connections/cloudinary');
+
 const cors = require('cors');
 
 //importing mongoose model
@@ -17,8 +21,18 @@ const user = require('./models/user');
 const person = require('./models/person'); 
 
 // open up the CORS setting server so any browser client can access this
-app.use(cors())
+app.use(cors({
+  origin: 'http://localhost:5173', // frontend URL
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // if you need to send cookies/auth headers
+}))
 
+//import multer to handle file uploads
+const multer = require("./middleware/multer");
+
+//DB Model
+const ImageModel = require('./models/Image') // Import the Image model
 
 //middleware---for use between req and res cylces
 app.use(logger('dev'))
@@ -27,10 +41,15 @@ app.use(logger('dev'))
 app.use(express.json())
 // example: '{"description": 'Climb Mt. Fuji'}
 app.use(express.urlencoded())
-
+// open the uploads folder so we can read it 
+app.use(express.static(__dirname + '/uploads/'))
 
 // connect the db to backend server
 require('./connections/mongoConnection.js')
+
+//DB Model
+const Image = require("./models/Image"); // Import the Image model
+const upload = require("./middleware/multer");
 
 //ROUTES
 // READ - GET routes for root, user, tree, branch
@@ -104,12 +123,13 @@ app.get('/tree/:owner', function(req, res) {
 
 //CREATE - POST routes for user, tree, branch
 // CREATE - POST for person
+// TODO - add all fields 
 app.post('/person', function(req, res) {
 
-    const { treeId, firstName,lastName, creator  } = req.body; 
+    const { treeId, firstName,lastName, creator, photoArray  } = req.body; 
 
     person.create ({
-        treeId, firstName, lastName, creator,
+        treeId, firstName, lastName, creator, photoArray
     })
     .then  (function (data) {
         res.json(data)
@@ -120,6 +140,33 @@ app.post('/person', function(req, res) {
     })
 
 });
+
+//CREATE - POST route for image upload
+// multer captures the image and stores it on the hard disk of server
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file){
+        console.log('no req.file')
+        return res.status(400).json({ error: 'No file upload'})
+    }
+
+    //Upload our image to cloudinary
+    const result = await cloudinary.uploader.upload(req.file.path)
+
+    //Upon successful response from cloudinary save url to DB
+    const newImage = new ImageModel({
+      imageUrl: result.secure_url,
+    });
+
+    // Now with the model, save it to mongoDB
+    const savedImage = await newImage.save();
+    res.json(savedImage);
+  } catch (error) {
+    // if error happens respond accordingly
+    res.status(500).json({ error: "Something went wrong." });
+  }
+});
+
 
 //CREATE - POST for user 
 app.post('/user', function(req, res) {
@@ -262,4 +309,4 @@ app.delete('/tree/:id', function(req, res) {
 });
 
 //listen
-app.listen(PORT, ()=> console.log(`FotoTree App is listening on PORT: ${PORT} `))
+app.listen(PORT, ()=> console.log(`FotoTree App is listening on PORT: ${PORT} `));
