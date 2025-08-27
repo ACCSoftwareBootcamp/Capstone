@@ -14,7 +14,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import CustomNode from "../ReactFlowTree/CustomNodes";
 
-// register custom node types
+// use my custom node types
 const nodeTypes = { custom: CustomNode };
 
 // --- Default nodes/edges for empty DB ---
@@ -28,7 +28,7 @@ const defaultNodes = [
 ];
 const defaultEdges = [];
 
-// --- ID helpers ---
+// dynamic id creation, to avoid bugs when a tree is loaded with existing nodes
 const getMaxNodeId = (nodes) =>
   nodes.reduce((max, node) => {
     const match = node.id.match(/^n(\d+)$/);
@@ -52,7 +52,6 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
         if (!res.ok) throw new Error("Failed to fetch people");
         const data = await res.json();
         setPeople(data);
-        console.log("people data", data)
       } catch (err) {
         console.log("err", err);
       }
@@ -82,16 +81,16 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
   );
 
   const { screenToFlowPosition } = useReactFlow();
-  idCounter = getMaxNodeId(nodes); // reset counter
+  idCounter = getMaxNodeId(nodes); // reset counter on ids
 
   const connectingHandleId = useRef(null);
   const connectingNodeId = useRef(null);
-  const isCreatingNode = useRef(false);
 
+  //edge creation goes from one to it's counterpart
   const getOppositeHandle = (handleId) =>
-    ({ top: "bottom", bottom: "top", left: "right", right: "left" }[handleId] ||
-      "top");
+    ({ top: "bottom", bottom: "top", left: "right", right: "left" }[handleId] || "top");
 
+  //re map the node when the label data changes
   const onLabelChange = useCallback(
     (id, newLabel) => {
       setNodes((nds) =>
@@ -113,36 +112,48 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     [setNodes]
   );
 
+  // store the source handle and node when starting a connection
   const onConnectStart = useCallback((_, { handleId, nodeId }) => {
     connectingHandleId.current = handleId;
     connectingNodeId.current = nodeId;
-    isCreatingNode.current = true;
   }, []);
 
+  //  existing nodes now connect  with straight edges (defaults to curved)
   const onConnect = useCallback(
     (params) => {
-      if (isCreatingNode.current) return;
-      setEdges((eds) => addEdge(params, eds));
+      setEdges((eds) =>
+        addEdge({ ...params, type: "straight" }, eds) 
+      );
     },
     [setEdges]
   );
 
+  // connect + create new node only if drop is in empty space- otherwise will connect with existing node handle
   const onConnectEnd = useCallback(
     (event) => {
-      if (!isCreatingNode.current) return;
-
       const sourceHandle = connectingHandleId.current;
       const sourceNodeId = connectingNodeId.current;
 
       if (!sourceHandle || !sourceNodeId || !nodes.some((n) => n.id === sourceNodeId)) {
-        isCreatingNode.current = false;
+        connectingHandleId.current = null;
+        connectingNodeId.current = null;
         return;
       }
 
+      // check if dropped on a valid handle
+      const targetElement = document.elementFromPoint(event.clientX, event.clientY);
+      if (targetElement?.classList.contains("react-flow__handle")) {
+        connectingHandleId.current = null;
+        connectingNodeId.current = null;
+        return; // React Flow handles the edge automatically
+      }
+
+      // drop in empty space → create new node
       const newNodeId = getId();
       const { clientX, clientY } =
         "changedTouches" in event ? event.changedTouches[0] : event;
 
+        //round to our grid
       let position = screenToFlowPosition({ x: clientX, y: clientY });
       const snap = (val, g = 20) => Math.round(val / g) * g;
       position = { x: snap(position.x), y: snap(position.y) };
@@ -155,6 +166,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
           type: "custom",
         })
       );
+
       setEdges((eds) =>
         eds.concat({
           id: `e${Date.now()}`,
@@ -166,11 +178,13 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
         })
       );
 
-      isCreatingNode.current = false;
+      connectingHandleId.current = null;
+      connectingNodeId.current = null;
     },
     [nodes, screenToFlowPosition, onLabelChange, setNodes, setEdges, people]
   );
 
+  //updates positions if you use save button
   const saveFlow = useCallback(async () => {
     if (!treeId) return;
 
@@ -191,6 +205,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
       })),
     };
 
+    //calls server with new position
     try {
       const res = await fetch(`http://localhost:5001/tree/${treeId}`, {
         method: "PUT",
