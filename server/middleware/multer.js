@@ -3,17 +3,22 @@ const multer = require('multer');
 // need this to extract file name extensions
 const path = require('path');
 
-const upload = multer({
-  storage: multer.diskStorage({}),
-  // todo - add a file extension filter
+const upload = multer ({
+  storage: multer.diskStorage({
+  // on the server store the received file at uploads folder
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // specify the directory to save the uploaded files
+    cb(null, 'uploads/'); // specify the folder to save files
   },
-    // create a unique filename using the original name and current timestamp
-
+  filename: (req, file, cb) => {
+    //use original name + timestamp to avoid filename conflicts 
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+}),
+  
   fileFilter: (req, file, cb) => {
     // check if the file is an image
     const ext = path.extname(file.originalname).toLowerCase();
+    console.log("ext is: ", ext)
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
       return cb(new Error('Only images are allowed'), false);
     }

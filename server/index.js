@@ -10,6 +10,7 @@ const logger= require('morgan')
 const morgan = require('morgan');
 
 
+
 //use dotenv to read .env file
 const dotenv = require('dotenv').config({ path: './.env' });
 //import cloudinary to upload files
@@ -27,7 +28,10 @@ app.use(cors())
 
 
 //import multer to handle file uploads
-const upload = require("./middleware/multer");
+const multer = require("./middleware/multer");
+
+//DB Model
+const ImageModel = require('./models/Image') // Import the Image model
 
 
 //middleware---for use between req and res cylces
@@ -37,6 +41,8 @@ app.use(logger('dev'))
 app.use(express.json())
 // example: '{"description": 'Climb Mt. Fuji'}
 app.use(express.urlencoded())
+// open the uploads folder so we can read it 
+app.use(express.static(__dirname + '/uploads/'))
 
 
 // connect the db to backend server
@@ -44,7 +50,7 @@ require('./connections/mongoConnection')
 
 //DB Model
 const Image = require("./models/Image"); // Import the Image model
-const multer = require("multer");
+const upload = require("./middleware/multer");
 
 //ROUTES
 // READ - GET routes for root, user, tree, branch
@@ -116,13 +122,16 @@ app.post('/person', function(req, res) {
 // multer captures the image and stores it on the hard disk of server
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
+    if (!req.file){
+        console.log('no req.file')
+        return res.status(400).json({ error: 'No file upload'})
+    }
+
     //Upload our image to cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "uploads", // specify the folder in cloudinary
-    });
+    const result = await cloudinary.uploader.upload(req.file.path)
 
     //Upon successful response from cloudinary save url to DB
-    const newImage = new Image({
+    const newImage = new ImageModel({
       imageUrl: result.secure_url,
     });
 
