@@ -8,31 +8,33 @@ const CreatePerson = () => {
   const { user, isLoaded } = useUser();
   const [treeId, setTreeId] = useState("");
   const [mongoUser, setMongoUser] = useState("");
-
   const [formData, setFormData] = useState({
     firstName: "",
+    middleName: "",
     lastName: "",
+    suffix: "",
+    parents: "",
+    spouse: "",
+    children: "",
+    gender: "",
     birthDate: "",
+    deathDate: "",
     partnerId: "",
     bio: "",
   });
-
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Load mongoUser and treeId when Clerk user is loaded
   useEffect(() => {
     if (!isLoaded || !user) return;
 
     const fetchMongoUserAndTree = async () => {
       try {
-        // Fetch Mongo user using Clerk ID
         const userRes = await fetch(`http://localhost:5001/user/${user.id}`);
         if (!userRes.ok) throw new Error("Failed to fetch user");
         const userData = await userRes.json();
         setMongoUser(userData._id);
 
-        // Fetch tree using Mongo user ID
         const treeRes = await fetch(`http://localhost:5001/tree/${userData._id}`);
         if (!treeRes.ok) throw new Error("Failed to fetch tree");
         const treeData = await treeRes.json();
@@ -64,19 +66,15 @@ const CreatePerson = () => {
 
     let photoArray = [];
 
-    // Upload image first if file selected
     if (file) {
       try {
         const uploadFormData = new FormData();
         uploadFormData.append("file", file);
-
         const uploadRes = await fetch("http://localhost:5001/upload", {
           method: "POST",
           body: uploadFormData,
         });
-
         if (!uploadRes.ok) throw new Error("Image upload failed");
-
         const uploadResult = await uploadRes.json();
         photoArray.push(uploadResult.imageUrl);
       } catch (err) {
@@ -87,10 +85,9 @@ const CreatePerson = () => {
 
     const personObj = {
       treeId,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      creator: mongoUser, // Mongo user ID
+      creator: mongoUser,
       photoArray,
+      ...formData,
     };
 
     try {
@@ -99,16 +96,21 @@ const CreatePerson = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(personObj),
       });
-
       if (!res.ok) throw new Error("Server error creating person");
-
       const createdPerson = await res.json();
       console.log("Person created:", createdPerson);
 
       setFormData({
         firstName: "",
+        middleName: "",
         lastName: "",
+        suffix: "",
+        parents: "",
+        spouse: "",
+        children: "",
+        gender: "",
         birthDate: "",
+        deathDate: "",
         partnerId: "",
         bio: "",
       });
@@ -119,36 +121,83 @@ const CreatePerson = () => {
     }
   };
 
+  const sectionStyle = { marginBottom: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "5px" };
+  const inputStyle = { width: "100%", padding: "8px", margin: "5px 0", boxSizing: "border-box" };
+  const labelStyle = { display: "block", marginTop: "10px", fontWeight: "bold" };
+  const radioContainerStyle = { display: "flex", gap: "15px", marginTop: "5px" };
+
   return (
     <>
       <Header />
-      <form onSubmit={handleAddPerson}>
-        <div className="form-group">
-          <label>First Name</label>
-          <input name="firstName" value={formData.firstName} onChange={handleChange} />
+      <form onSubmit={handleAddPerson} style={{ maxWidth: "600px", margin: "20px auto" }}>
+        {/* Personal Info */}
+        <div style={sectionStyle}>
+          <h3>Personal Info</h3>
+          <label style={labelStyle}>First Name</label>
+          <input name="firstName" value={formData.firstName} onChange={handleChange} style={inputStyle} />
+
+          <label style={labelStyle}>Middle Name</label>
+          <input name="middleName" value={formData.middleName} onChange={handleChange} style={inputStyle} />
+
+          <label style={labelStyle}>Last Name</label>
+          <input name="lastName" value={formData.lastName} onChange={handleChange} style={inputStyle} />
+
+          <label style={labelStyle}>Suffix</label>
+          <input name="suffix" value={formData.suffix} onChange={handleChange} style={inputStyle} />
+
+          <label style={labelStyle}>Gender</label>
+          <div style={radioContainerStyle}>
+            {["male", "female", "other"].map((g) => (
+              <label key={g}>
+                <input
+                  type="radio"
+                  name="gender"
+                  value={g}
+                  checked={formData.gender === g}
+                  onChange={handleChange}
+                />
+                {g.charAt(0).toUpperCase() + g.slice(1)}
+              </label>
+            ))}
+          </div>
         </div>
 
-        <div className="form-group">
-          <label>Last Name</label>
-          <input name="lastName" value={formData.lastName} onChange={handleChange} />
+        {/* Family Info */}
+        <div style={sectionStyle}>
+          <h3>Family Info</h3>
+          <label style={labelStyle}>Parents</label>
+          <input name="parents" value={formData.parents} onChange={handleChange} style={inputStyle} />
+
+          <label style={labelStyle}>Spouse</label>
+          <input name="spouse" value={formData.spouse} onChange={handleChange} style={inputStyle} />
+
+          <label style={labelStyle}>Children</label>
+          <input name="children" value={formData.children} onChange={handleChange} style={inputStyle} />
         </div>
 
-        <div className="form-group">
-          <label>Birth Date</label>
-          <input name="birthDate" type="date" value={formData.birthDate} onChange={handleChange} />
+        {/* Dates */}
+        <div style={sectionStyle}>
+          <h3>Dates</h3>
+          <label style={labelStyle}>Birth Date</label>
+          <input name="birthDate" type="date" value={formData.birthDate} onChange={handleChange} style={inputStyle} />
+
+          <label style={labelStyle}>Death Date</label>
+          <input name="deathDate" type="date" value={formData.deathDate} onChange={handleChange} style={inputStyle} />
         </div>
 
-        <div className="form-group">
-          <label>Biography</label>
-          <textarea name="bio" value={formData.bio} onChange={handleChange}></textarea>
+        {/* Biography & Profile Picture */}
+        <div style={sectionStyle}>
+          <h3>Biography & Profile Picture</h3>
+          <label style={labelStyle}>Biography</label>
+          <textarea name="bio" value={formData.bio} onChange={handleChange} style={inputStyle}></textarea>
+
+          <label style={labelStyle}>Profile Picture</label>
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ marginTop: "5px" }} />
         </div>
 
-        <div className="form-group">
-          <label>Profile Picture</label>
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} />
-        </div>
-
-        <button type="submit">Add Person</button>
+        <button type="submit" style={{ padding: "10px 20px", fontSize: "16px" }}>
+          Add Person
+        </button>
       </form>
       <Footer />
     </>

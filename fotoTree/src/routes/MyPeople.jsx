@@ -49,15 +49,15 @@ const MyPeople = () => {
     fetchPeople();
   }, [mongoId]);
 
-  // Helper: find full name from _id
-  const getNameById = (id) => {
-    const p = people.find((person) => person._id === id);
-    return p ? `${p.firstName} ${p.lastName}` : "Unknown";
-  };
-
-  // Helper: find children (where this person’s _id appears in parents array)
-  const getChildren = (id) => {
-    return people.filter((p) => p.parents?.includes(id));
+  // Helper: format full name including middle name and suffix
+  const getFullName = (person) => {
+    const parts = [
+      person.firstName,
+      person.middleName,
+      person.lastName,
+      person.suffix
+    ].filter(Boolean);
+    return parts.join(' ');
   };
 
   // Styles
@@ -89,6 +89,7 @@ const MyPeople = () => {
     marginBottom: "4px",
   });
   const hoverStyle = { backgroundColor: "#e0e0e0" };
+  const fieldStyle = { marginBottom: "12px", lineHeight: "1.5" };
 
   return (
     <div style={containerStyle}>
@@ -101,43 +102,57 @@ const MyPeople = () => {
               alt="profile"
               style={profileImgStyle}
             />
-            <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "8px" }}>
-              {selectedPerson.firstName} {selectedPerson.lastName}
+            <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}>
+              {getFullName(selectedPerson)}
             </h2>
-            <p>
-              <strong>Birth Date:</strong> {selectedPerson.birthDate || "N/A"}
-            </p>
-            <p>
-              <strong>Death Date:</strong> {selectedPerson.deathDate || "N/A"}
-            </p>
-            <p>
+            
+            <div style={fieldStyle}>
+              <strong>First Name:</strong> {selectedPerson.firstName || "N/A"}
+            </div>
+            
+            {selectedPerson.middleName && (
+              <div style={fieldStyle}>
+                <strong>Middle Name:</strong> {selectedPerson.middleName}
+              </div>
+            )}
+            
+            <div style={fieldStyle}>
+              <strong>Last Name:</strong> {selectedPerson.lastName || "N/A"}
+            </div>
+            
+            {selectedPerson.suffix && (
+              <div style={fieldStyle}>
+                <strong>Suffix:</strong> {selectedPerson.suffix}
+              </div>
+            )}
+            
+            <div style={fieldStyle}>
               <strong>Gender:</strong> {selectedPerson.gender || "N/A"}
-            </p>
-            <p>
-              <strong>Bio:</strong> {selectedPerson.bio || "No bio available"}
-            </p>
+            </div>
+            
+            <div style={fieldStyle}>
+              <strong>Birth Date:</strong> {selectedPerson.birth ? new Date(selectedPerson.birth).toLocaleDateString() : "N/A"}
+            </div>
+            
+            <div style={fieldStyle}>
+              <strong>Death Date:</strong> {selectedPerson.death ? new Date(selectedPerson.death).toLocaleDateString() : "N/A"}
+            </div>
 
-            {selectedPerson.spouse && (
-              <p>
-                <strong>Spouse:</strong> {getNameById(selectedPerson.spouse)}
-              </p>
-            )}
+            <div style={fieldStyle}>
+              <strong>Parents:</strong> {selectedPerson.parents || "N/A"}
+            </div>
 
-            {selectedPerson.parents?.length > 0 && (
-              <p>
-                <strong>Parents:</strong>{" "}
-                {selectedPerson.parents.map((id) => getNameById(id)).join(", ")}
-              </p>
-            )}
+            <div style={fieldStyle}>
+              <strong>Spouse:</strong> {selectedPerson.spouseName || "N/A"}
+            </div>
 
-            {getChildren(selectedPerson._id).length > 0 && (
-              <p>
-                <strong>Children:</strong>{" "}
-                {getChildren(selectedPerson._id)
-                  .map((child) => `${child.firstName} ${child.lastName}`)
-                  .join(", ")}
-              </p>
-            )}
+            <div style={fieldStyle}>
+              <strong>Children:</strong> {selectedPerson.children || "N/A"}
+            </div>
+            
+            <div style={fieldStyle}>
+              <strong>Bio:</strong> {selectedPerson.biography || "No bio available"}
+            </div>
           </>
         ) : (
           <div style={{ color: "#888" }}>Select a person from the list</div>
@@ -156,7 +171,7 @@ const MyPeople = () => {
               onMouseOver={(e) => (e.currentTarget.style.backgroundColor = hoverStyle.backgroundColor)}
               onMouseOut={(e) => (e.currentTarget.style.backgroundColor = selectedPerson?._id === p._id ? "#d3d3d3" : "transparent")}
             >
-              {p.firstName} {p.lastName}
+              {getFullName(p)}
             </li>
           ))}
         </ul>

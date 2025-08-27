@@ -127,10 +127,10 @@ app.get('/tree/:owner', function(req, res) {
 // TODO - add all fields 
 app.post('/person', function(req, res) {
 
-    const { treeId, firstName,lastName, creator, photoArray  } = req.body; 
+    const { treeId, firstName,lastName, middleName, suffix, gender, creator, photoArray, parents, spouse, children, birthDate, deathDate, bio   } = req.body; 
 
     person.create ({
-        treeId, firstName, lastName, creator, photoArray
+        treeId, firstName, lastName, creator, photoArray, middleName, suffix, gender, creator, parents, spouse, children, birth: birthDate, death: deathDate, biography: bio, spouseName: spouse
     })
     .then  (function (data) {
         res.json(data)
