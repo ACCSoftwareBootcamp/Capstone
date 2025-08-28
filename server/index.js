@@ -357,44 +357,116 @@ app.delete("/person/:id", function (req, res) {
       res.status(400).json({ message: "Error deleting from Mongo person" });
     });
 });
-// DELETE - DELETE for user
+// DELETE 
+//TODO-needs user delete
+
 // DELETE a photo from a person by ID and photo URL
 app.delete("/person/:id/photo/:photoUrl", async (req, res) => {
   const { id, photoUrl } = req.params;
+
+  console.log("DELETE request received for photo:", photoUrl);
+  console.log("Person ID:", id);
 
   if (!photoUrl) {
     return res.status(400).json({ message: "No photo URL provided" });
   }
 
   try {
+    // Decode the URL first
+    const decodedPhotoUrl = decodeURIComponent(photoUrl);
+    console.log("Decoded photo URL:", decodedPhotoUrl);
+
     // Find the person first
     const personData = await person.findById(id);
     if (!personData) {
       return res.status(404).json({ message: "Person not found" });
     }
 
-    // Extract public ID variable so we can send cloudinary delete request
-    const publicId = photoUrl
-    //extraction function
-      .split("/upload/")[1]
-      .replace(/\/v\d+/, "")
-      .replace(/\.[^/.]+$/, "");
+    console.log("Person found, current photoArray:", personData.photoArray);
+
+    // public ID extraction with steps for atypical urls
+    let publicId;
+    try {
+      if (!decodedPhotoUrl.includes("/upload/")) {
+        throw new Error("URL doesn't contain /upload/ - might not be a Cloudinary URL");
+      }
+
+      // Extract everything after /upload/
+      const afterUpload = decodedPhotoUrl.split("/upload/")[1];
+      console.log("After upload split:", afterUpload);
+
+      if (!afterUpload) {
+        throw new Error("Nothing found after /upload/ in URL");
+      }
+
+      // Remove version number if present (e.g., /v1234567890/)
+      let withoutVersion = afterUpload.replace(/^v\d+\//, "");
+      console.log("After version removal:", withoutVersion);
+
+      // Remove file extension
+      publicId = withoutVersion.replace(/\.[^/.]+$/, "");
+      console.log("Final public ID:", publicId);
+
+    } catch (extractionError) {
+      console.error("Error extracting public ID:", extractionError.message);
+      console.log("Attempting alternative extraction method...");
+      
+      // Alternative: try to extract filename without full path
+      const urlParts = decodedPhotoUrl.split("/");
+      const filename = urlParts[urlParts.length - 1];
+      publicId = filename.replace(/\.[^/.]+$/, "");
+      console.log("Alternative public ID:", publicId);
+    }
+
+    if (!publicId) {
+      console.error("Could not extract public ID from URL:", decodedPhotoUrl);
+      return res.status(400).json({ 
+        message: "Could not extract public ID from photo URL",
+        photoUrl: decodedPhotoUrl 
+      });
+    }
+
+    console.log("Attempting to delete from Cloudinary with public ID:", publicId);
 
     // Delete from Cloudinary
     const cloudResult = await cloudinary.uploader.destroy(publicId);
+    console.log("Cloudinary delete result:", cloudResult);
 
-    // Remove URL from Mongo person
-    await person.findByIdAndUpdate(id, {
-      $pull: { photoArray: photoUrl },
-    });
+    // Check if Cloudinary deletion was successful
+    if (cloudResult.result !== 'ok' && cloudResult.result !== 'not found') {
+      console.error("Cloudinary deletion failed:", cloudResult);
+      // Continue anyway to remove from database
+    }
+
+    // Remove URL from Mongo person - check both encoded and decoded versions
+    const updateResult = await person.findByIdAndUpdate(
+      id, 
+      {
+        $pull: { 
+          photoArray: { 
+            $in: [photoUrl, decodedPhotoUrl] 
+          } 
+        }
+      },
+      { new: true }
+    );
+
+    console.log("Database update result:", updateResult);
 
     res.status(200).json({
-      message: "Photo deleted successfully",
+      message: "Photo deletion attempted",
       cloudinaryResult: cloudResult,
+      publicIdUsed: publicId,
+      databaseUpdateSuccess: !!updateResult
     });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error deleting photo", error });
+    console.error("Error in delete route:", error);
+    res.status(500).json({ 
+      message: "Error deleting photo", 
+      error: error.message,
+      photoUrl: photoUrl 
+    });
   }
 });
 

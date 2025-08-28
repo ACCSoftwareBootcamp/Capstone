@@ -13,9 +13,12 @@ const MyPeople = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [newFile, setNewFile] = useState(null);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0); //  track which photo is showing
   const [isSaving, setIsSaving] = useState(false); // Loading state for save operation
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Delete confirmation dialog
-  const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete operation
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Delete confirmation 
+  const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete operation  
+  const [photosToDelete, setPhotosToDelete] = useState([]); // track deleted photos
+
 
   // Fetch mongo user id
   useEffect(() => {
@@ -48,7 +51,6 @@ const MyPeople = () => {
         const data = await res.json();
         setPeople(data);
         if (data.length > 0) setSelectedPerson(data[0]);
-        // console.log("People:", data);
       } catch (err) {
         console.error("Error fetching people", err);
       }
@@ -56,6 +58,11 @@ const MyPeople = () => {
 
     fetchPeople();
   }, [mongoId]);
+
+  // Reset photo index when changing person
+  useEffect(() => {
+    setCurrentPhotoIndex(0);
+  }, [selectedPerson]);
 
   const getFullName = (person) => {
     const parts = [
@@ -102,123 +109,108 @@ const MyPeople = () => {
   };
 
   // Handle save - includes photo upload if needed
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      let updatedPhotoArray = editFormData.photoArray || [];
+  // Handle save - includes photo upload if needed
+const handleSave = async () => {
+  setIsSaving(true);
+  try {
+    let updatedPhotoArray = [...(editFormData.photoArray || [])];
 
-      // If we have a new file, upload it first
-      if (newFile) {
-        console.log("Uploading new file:", newFile.name);
+    // If we have a new file, upload it first
+    if (newFile) {
+      console.log("Uploading new file:", newFile.name);
 
-        // Delete old photo if exists
-        if (selectedPerson.photoArray?.length > 0) {
-          const oldPhotoUrl = selectedPerson.photoArray[0];
-          console.log("Deleting old photo:", oldPhotoUrl);
-          await fetch(
-            `http://localhost:5001/person/${
-              selectedPerson._id
-            }/photo/${encodeURIComponent(oldPhotoUrl)}`,
-            { method: "DELETE" }
-          );
-        }
+      const formData = new FormData();
+      formData.append("file", newFile);
 
-        // Upload new photo to Cloudinary
-        const formData = new FormData();
-        formData.append("file", newFile);
+      const uploadRes = await fetch("http://localhost:5001/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-        const uploadRes = await fetch("http://localhost:5001/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadRes.ok) {
-          const errorText = await uploadRes.text();
-          console.error("Upload failed:", uploadRes.status, errorText);
-          throw new Error("Photo upload failed");
-        }
-
-        const uploadResult = await uploadRes.json();
-        console.log("Upload response:", uploadResult);
-
-        // The server returns the saved image document with imageUrl property
-        const imageUrl = uploadResult.imageUrl;
-        console.log("Setting photoArray to:", [imageUrl]);
-        updatedPhotoArray = [imageUrl];
+      if (!uploadRes.ok) {
+        const errorText = await uploadRes.text();
+        console.error("Upload failed:", uploadRes.status, errorText);
+        throw new Error("Photo upload failed");
       }
 
-      // Send PUT request with updated form data
-      const putData = { ...editFormData, photoArray: updatedPhotoArray };
-      console.log("Sending PUT request with data:", putData);
+      const uploadResult = await uploadRes.json();
+      const imageUrl = uploadResult.imageUrl;
 
-      const response = await fetch(
-        `http://localhost:5001/person/${selectedPerson._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(putData),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to update person");
-      const updatedPerson = await response.json();
-      setPeople((prev) =>
-        prev.map((p) => (p._id === updatedPerson._id ? updatedPerson : p))
-      );
-      setSelectedPerson(updatedPerson);
-      setIsEditing(false);
-      setNewFile(null);
-      console.log("Person updated successfully:", updatedPerson);
-    } catch (error) {
-      console.error("Error updating person:", error);
-      alert("Failed to save changes. Please try again.");
-    } finally {
-      setIsSaving(false);
+      updatedPhotoArray.push(imageUrl); // 👈 append new photo
     }
-  };
 
-  const handleCancel = () => {
+    // Send PUT request with updated form data
+    const putData = { ...editFormData, photoArray: updatedPhotoArray };
+    console.log("Sending PUT request with data:", putData);
+
+    const response = await fetch(
+      `http://localhost:5001/person/${selectedPerson._id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(putData),
+      }
+    );
+
+    if (!response.ok) throw new Error("Failed to update person");
+    const updatedPerson = await response.json();
+
+    // --- new: send DELETE requests for photos marked for deletion ---
+    for (const photoUrl of photosToDelete) {
+      try {
+        await fetch(
+          `http://localhost:5001/person/${selectedPerson._id}/photo/${encodeURIComponent(
+            photoUrl
+          )}`,
+          { method: "DELETE" }
+        );
+      } catch (err) {
+        console.error("Error deleting photo:", err);
+      }
+    }
+    setPhotosToDelete([]); // clear queue after save
+
+    setPeople((prev) =>
+      prev.map((p) => (p._id === updatedPerson._id ? updatedPerson : p))
+    );
+    setSelectedPerson(updatedPerson);
     setIsEditing(false);
-    setEditFormData({});
     setNewFile(null);
-  };
+    console.log("Person updated successfully:", updatedPerson);
+  } catch (error) {
+    console.error("Error updating person:", error);
+    alert("Failed to save changes. Please try again.");
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+
 
   // Handle delete confirmation
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
-
-  // Handle delete confirmation cancel
   const handleDeleteCancel = () => {
     setShowDeleteConfirm(false);
   };
+
+  //HandleCancel editing
+  // Cancel editing and restore original data
+const handleCancel = () => {
+  setIsEditing(false);
+  setEditFormData(selectedPerson); // revert edits
+  setNewFile(null);
+  setPhotosToDelete([]); // clear any queued deletions
+};
+
 
   // Handle delete person
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
-      // First delete photo if it exists
-      if (selectedPerson.photoArray?.length > 0) {
-        const photoUrl = selectedPerson.photoArray[0];
-        console.log("Deleting photo:", photoUrl);
-
-        const photoDeleteRes = await fetch(
-          `http://localhost:5001/person/${
-            selectedPerson._id
-          }/photo/${encodeURIComponent(photoUrl)}`,
-          { method: "DELETE" }
-        );
-
-        if (!photoDeleteRes.ok) {
-          console.warn(
-            "Failed to delete photo, continuing with person deletion"
-          );
-        }
-      }
-
-      // Delete the person
       const personDeleteRes = await fetch(
         `http://localhost:5001/person/${selectedPerson._id}`,
         { method: "DELETE" }
@@ -226,10 +218,7 @@ const MyPeople = () => {
 
       if (!personDeleteRes.ok) throw new Error("Failed to delete person");
 
-      // Update local state
       setPeople((prev) => prev.filter((p) => p._id !== selectedPerson._id));
-
-      // Select next person or clear selection
       const remainingPeople = people.filter(
         (p) => p._id !== selectedPerson._id
       );
@@ -246,11 +235,35 @@ const MyPeople = () => {
     }
   };
 
-  // Get current display image
-  const getCurrentDisplayImage = () => {
-    if (newFile) return URL.createObjectURL(newFile);
-    return editFormData.photoArray?.[0];
+// Handle photo deletion in edit mode
+const handleDeletePhoto = (photoUrl) => {
+  // Instead of deleting immediately, mark it for deletion on save
+  setPhotosToDelete((prev) => [...prev, photoUrl]);
+
+  setEditFormData((prev) => ({
+    ...prev,
+    photoArray: prev.photoArray.filter((p) => p !== photoUrl),
+  }));
+  setCurrentPhotoIndex(0);
+};
+
+  // Photo navigation
+  const handlePrevPhoto = () => {
+    setCurrentPhotoIndex((prev) =>
+      prev > 0 ? prev - 1 : (getDisplayedPhotos().length || 1) - 1
+    );
   };
+  const handleNextPhoto = () => {
+    setCurrentPhotoIndex((prev) =>
+      prev < (getDisplayedPhotos().length || 1) - 1 ? prev + 1 : 0
+    );
+  };
+
+  const getDisplayedPhotos = () =>
+    isEditing ? editFormData.photoArray : selectedPerson?.photoArray || [];
+
+  const displayedPhotos = getDisplayedPhotos();
+  const currentPhoto = displayedPhotos[currentPhotoIndex];
 
   // --- Styles ---
   const containerStyle = { display: "flex", height: "100vh" };
@@ -268,13 +281,40 @@ const MyPeople = () => {
     borderLeft: "1px solid #ccc",
     overflowY: "auto",
   };
+  const profileImgWrapper = {
+    position: "relative",
+    margin: "16px auto",
+    width: "220px",
+  };
   const profileImgStyle = {
     width: "200px",
     height: "200px",
     objectFit: "cover",
     borderRadius: "8px",
-    margin: "16px auto",
     display: "block",
+    margin: "0 auto",
+  };
+  const arrowButtonStyle = (side) => ({
+    position: "absolute",
+    top: "50%",
+    [side]: "-30px",
+    transform: "translateY(-50%)",
+    background: "none",
+    border: "none",
+    fontSize: "18px",
+    cursor: "pointer",
+  });
+  const deletePhotoButtonStyle = {
+    position: "absolute",
+    top: "-10px",
+    right: "-10px",
+    backgroundColor: "#dc3545",
+    color: "white",
+    border: "none",
+    borderRadius: "50%",
+    width: "30px",
+    height: "30px",
+    cursor: "pointer",
   };
   const listItemStyle = (isSelected) => ({
     cursor: "pointer",
@@ -344,7 +384,7 @@ const MyPeople = () => {
     color: "white",
     position: "absolute",
     top: "10px",
-    right: "60px", // Position to the left of edit button
+    right: "60px",
     fontSize: "14px",
     padding: "4px 10px",
   };
@@ -411,15 +451,149 @@ const MyPeople = () => {
                   </button>
                 </>
               )}
-              <img
-                src={
-                  isEditing
-                    ? getCurrentDisplayImage()
-                    : selectedPerson.photoArray?.[0]
-                }
-                alt="profile"
-                style={profileImgStyle}
-              />
+
+// Replace the existing photo viewer section with this enhanced version:
+
+{/* --- Enhanced Photo Viewer --- */}
+<div style={profileImgWrapper}>
+  {currentPhoto ? (
+    <>
+      <img
+        src={currentPhoto}
+        alt="profile"
+        style={profileImgStyle}
+      />
+      {/* Show navigation arrows in both view and edit mode when multiple photos */}
+      {displayedPhotos.length > 1 && (
+        <>
+          <button
+            onClick={handlePrevPhoto}
+            style={arrowButtonStyle("left")}
+          >
+            ◀
+          </button>
+          <button
+            onClick={handleNextPhoto}
+            style={arrowButtonStyle("right")}
+          >
+            ▶
+          </button>
+        </>
+      )}
+      {/* Delete button only in edit mode */}
+      {isEditing && (
+        <button
+          onClick={() => handleDeletePhoto(currentPhoto)}
+          style={deletePhotoButtonStyle}
+        >
+          ✕
+        </button>
+      )}
+    </>
+  ) : (
+    <div style={{ fontStyle: "italic", color: "#666" }}>
+      No photos available
+    </div>
+  )}
+  
+  {/* Photo counter when multiple photos exist */}
+  {displayedPhotos.length > 1 && (
+    <div style={{
+      textAlign: "center",
+      fontSize: "14px",
+      color: "#666",
+      marginTop: "8px"
+    }}>
+      {currentPhotoIndex + 1} of {displayedPhotos.length}
+    </div>
+  )}
+</div>
+
+{/* Preview thumbnails for photos marked for deletion */}
+{isEditing && photosToDelete.length > 0 && (
+  <div style={{
+    marginBottom: "16px",
+    padding: "12px",
+    backgroundColor: "#fff3cd",
+    border: "1px solid #ffeaa7",
+    borderRadius: "4px"
+  }}>
+    <div style={{
+      fontSize: "14px",
+      fontWeight: "bold",
+      marginBottom: "8px",
+      color: "#856404"
+    }}>
+      Photos marked for deletion:
+    </div>
+    <div style={{
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "8px",
+      justifyContent: "center"
+    }}>
+      {photosToDelete.map((photoUrl, index) => (
+        <div
+          key={index}
+          style={{
+            position: "relative",
+            display: "inline-block"
+          }}
+        >
+          <img
+            src={photoUrl}
+            alt="To be deleted"
+            style={{
+              width: "60px",
+              height: "60px",
+              objectFit: "cover",
+              borderRadius: "4px",
+              border: "2px solid #dc3545",
+              opacity: 0.7
+            }}
+          />
+          <button
+            onClick={() => {
+              // Remove from deletion queue and add back to photos
+              setPhotosToDelete(prev => prev.filter(url => url !== photoUrl));
+              setEditFormData(prev => ({
+                ...prev,
+                photoArray: [...prev.photoArray, photoUrl]
+              }));
+            }}
+            style={{
+              position: "absolute",
+              top: "-8px",
+              right: "-8px",
+              backgroundColor: "#28a745",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              width: "20px",
+              height: "20px",
+              cursor: "pointer",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            ↶
+          </button>
+        </div>
+      ))}
+    </div>
+    <div style={{
+      fontSize: "12px",
+      color: "#856404",
+      marginTop: "8px",
+      fontStyle: "italic",
+      textAlign: "center"
+    }}>
+      Click ↶ to restore a photo, or Save to permanently delete
+    </div>
+  </div>
+)}
 
               {/* Photo upload input */}
               {isEditing && (
@@ -529,22 +703,18 @@ const MyPeople = () => {
                 <div style={labelCellStyle}>Gender:</div>
                 <div style={valueCellStyle}>
                   {isEditing ? (
-                    <select
+                    <input
+                      type="text"
                       name="gender"
                       value={editFormData.gender}
                       onChange={handleInputChange}
                       style={inputStyle}
-                    >
-                      <option value="">Select...</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
+                    />
                   ) : (
                     selectedPerson.gender || "N/A"
                   )}
                 </div>
-                <div style={labelCellStyle}>Birth Date:</div>
+                <div style={labelCellStyle}>Birth:</div>
                 <div style={valueCellStyle}>
                   {isEditing ? (
                     <input
@@ -560,7 +730,7 @@ const MyPeople = () => {
                     "N/A"
                   )}
                 </div>
-                <div style={labelCellStyle}>Death Date:</div>
+                <div style={labelCellStyle}>Death:</div>
                 <div style={valueCellStyle}>
                   {isEditing ? (
                     <input
@@ -618,95 +788,79 @@ const MyPeople = () => {
                     selectedPerson.children || "N/A"
                   )}
                 </div>
-                <div style={labelCellStyle}>Bio:</div>
+                <div style={labelCellStyle}>Biography:</div>
                 <div style={valueCellStyle}>
                   {isEditing ? (
                     <textarea
                       name="biography"
                       value={editFormData.biography}
                       onChange={handleInputChange}
-                      style={{ ...inputStyle, height: "80px" }}
                       rows={4}
+                      style={{ ...inputStyle, resize: "vertical" }}
                     />
                   ) : (
-                    selectedPerson.biography || "No bio available"
+                    selectedPerson.biography || "N/A"
                   )}
                 </div>
               </div>
             </>
           ) : (
-            <div className="field-value">You haven't created any family members yet! Go check out the 'Add Person' page to tell their story.</div>
+            <p>No person selected</p>
           )}
         </div>
 
         {/* Right side people list */}
         <div style={listStyle}>
-          <h3
-            style={{ fontSize: "24px", fontWeight: "600", marginBottom: "8px" }}
-          >
-            All People
-          </h3>
-          <hr />
-          <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
-            {people.length > 0 ? (
-              people.map((p) => (
-                <li
-                  key={p._id}
-                  onClick={() => setSelectedPerson(p)}
-                  style={listItemStyle(selectedPerson?._id === p._id)}
-                  onMouseOver={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      hoverStyle.backgroundColor)
-                  }
-                  onMouseOut={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      selectedPerson?._id === p._id ? "#d3d3d3" : "transparent")
-                  }
-                >
-                  {getFullName(p)}
-                </li>
-              ))
-            ) : (
-              <li style={{ padding: "8px", color: "#666", fontStyle: "italic" }}>
-                No People to Display.
-              </li>
-            )}
-          </ul>
+          <h3>People</h3>
+          {people.map((person) => (
+            <div
+              key={person._id}
+              style={listItemStyle(selectedPerson?._id === person._id)}
+              onClick={() => setSelectedPerson(person)}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor = "#e0e0e0")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor =
+                  selectedPerson?._id === person._id ? "#d3d3d3" : "transparent")
+              }
+            >
+              {getFullName(person)}
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div style={modalOverlayStyle}>
-            <div style={modalContentStyle}>
-              <h3 style={{ marginBottom: "16px", color: "#dc3545" }}>
-                Delete Person
-              </h3>
-              <p style={{ marginBottom: "24px", lineHeight: "1.5" }}>
-                Are you sure you want to delete this person? This will delete
-                all data and cannot be reversed.
-              </p>
-              <div>
-                <button
-                  onClick={handleDeleteConfirm}
-                  disabled={isDeleting}
-                  style={confirmDeleteButtonStyle}
-                >
-                  {isDeleting ? "Deleting..." : "Confirm"}
-                </button>
-                <button
-                  onClick={handleDeleteCancel}
-                  disabled={isDeleting}
-                  style={cancelDeleteButtonStyle}
-                >
-                  Cancel
-                </button>
-              </div>
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3>Confirm Delete</h3>
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>{getFullName(selectedPerson)}</strong>? This action cannot
+              be undone.
+            </p>
+            <div>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                style={confirmDeleteButtonStyle}
+              >
+                {isDeleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+              <button
+                onClick={handleDeleteCancel}
+                disabled={isDeleting}
+                style={cancelDeleteButtonStyle}
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
-      </div>
-      <br />
-      <br />
+        </div>
+      )}
+
       <Footer />
     </>
   );
