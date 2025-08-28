@@ -21,10 +21,10 @@ const Footer = () => {
           My Family
         </Link>
         <Link to="/person" className={`footer-link ${isActive("/person") ? "active" : ""}`}>
-          Add Family Member
+          Add Person
         </Link>
-        <span className="footer-link disabled">About</span>
-        <span className="footer-link disabled">My Account</span>
+        {/* <span className="footer-link disabled">About</span>
+        <span className="footer-link disabled">My Account</span> */}
       </div>
       <br />
       <div className="footer-bottom">

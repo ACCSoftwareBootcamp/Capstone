@@ -105,13 +105,13 @@ const LandingPage = () => {
           </div>
           <p>Click below to view your tree:</p>
           <Link to="/tree" className="link-btn">
-            See my FotoTree!
+            My FotoTree
           </Link>
           <Link to="/person" className="link-btn">
-            Add People to your tree
+            Add Family Members
           </Link>
           <Link to="/people" className="link-btn">
-            See my family members
+            View family members
           </Link>
           <Footer />
         </div>

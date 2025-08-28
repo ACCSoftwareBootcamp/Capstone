@@ -13,9 +13,4 @@ cloudinary.config({
   api_secret: API_SECRET
 })
 
-// Delete an image by public ID
-cloudinary.uploader.destroy('sample', function(error, result) {
-  console.log(result, error);
-});
-
 module.exports = cloudinary

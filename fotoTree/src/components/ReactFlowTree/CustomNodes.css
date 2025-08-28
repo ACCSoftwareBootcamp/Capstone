@@ -1,7 +1,8 @@
 .custom-node {
-  background: #fff;
-  border: 2px solid #888;
+  background: #19a74dcc;
+  border: 3px solid #b15b05;
   border-radius: 6px;
+  color: black;
   padding: 12px;
   width: 140px;
   height: 40px;
@@ -12,7 +13,7 @@
 }
 
 .custom-node.selected {
-  border-color: #F8F8F8;
+  border-color: #19a74dcc;
   box-shadow: 0 6px 25px rgba(25,167,77,0.6);
   z-index: 3;
 }
@@ -38,8 +39,8 @@
 .react-flow__handle {
   width: 10px;
   height: 10px;
-  background: #437A45;
-  border: 2px solid #F8F8F8;
+  background: #19a74dcc;
+  border: 2px solid #b15b05;
   opacity: 0.9;
   z-index: 5;
   transition: all 0.2s;

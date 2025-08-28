@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
-import "../components/myPeople/MyPeople.css";
+import "../components/MyPeople/MyPeople.css";
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
 
@@ -635,7 +635,7 @@ const MyPeople = () => {
               </div>
             </>
           ) : (
-            <div className="field-value">Select a person from the list</div>
+            <div className="field-value">You haven't created any family members yet! Go check out the 'Add Person' page to tell their story.</div>
           )}
         </div>
 
@@ -648,23 +648,29 @@ const MyPeople = () => {
           </h3>
           <hr />
           <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
-            {people.map((p) => (
-              <li
-                key={p._id}
-                onClick={() => setSelectedPerson(p)}
-                style={listItemStyle(selectedPerson?._id === p._id)}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    hoverStyle.backgroundColor)
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor =
-                    selectedPerson?._id === p._id ? "#d3d3d3" : "transparent")
-                }
-              >
-                {getFullName(p)}
+            {people.length > 0 ? (
+              people.map((p) => (
+                <li
+                  key={p._id}
+                  onClick={() => setSelectedPerson(p)}
+                  style={listItemStyle(selectedPerson?._id === p._id)}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      hoverStyle.backgroundColor)
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      selectedPerson?._id === p._id ? "#d3d3d3" : "transparent")
+                  }
+                >
+                  {getFullName(p)}
+                </li>
+              ))
+            ) : (
+              <li style={{ padding: "8px", color: "#666", fontStyle: "italic" }}>
+                No People to Display.
               </li>
-            ))}
+            )}
           </ul>
         </div>
 
