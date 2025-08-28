@@ -15,6 +15,7 @@ import {
 
 import "@xyflow/react/dist/style.css";
 import CustomNode from "../ReactFlowTree/CustomNodes";
+import Header from "../header/Header";
 
 // use my custom node types
 const nodeTypes = { custom: CustomNode };
@@ -315,10 +316,12 @@ const FlowTree = ({ nodes, edges, treeId, mongoId }) => {
         background: "white",
       }}
     >
+      <Header/>
       <ReactFlowProvider>
         <Flow initialNodes={nodes} initialEdges={edges} treeId={treeId} mongoId={mongoId} />
       </ReactFlowProvider>
     </div>
+  
   );
 };
 

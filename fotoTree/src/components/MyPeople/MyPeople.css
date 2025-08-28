@@ -1,4 +1,4 @@
-.myp-container {
+/* .myp-container {
   display: flex;
   gap: 20px;
   padding: 20px;
@@ -52,4 +52,122 @@
 .people-list li.active {
   background: #d0e6ff;
   font-weight: bold;
+} */
+
+
+/* MyPeople.css - matches CreatePerson styling */
+
+/* Page container */
+.page-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  background-color: #437A45;
+  color: #F8F8F8;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Cards for profile and list */
+.form-card {
+  background-color: #2b5b2f;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 10px;
+  flex: 1 1 400px;
+  max-width: 600px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* People list styling inside people-card */
+.people-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.people-list li {
+  background-color: #437A45;       /* Darker accent for list items */
+  color: #F8F8F8;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: 12px;             /* Rounded like form-card inputs */
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  transition: 0.3s, 0.2s;
+}
+
+.people-list li:hover {
+  background-color: #19A74D;       /* Main accent on hover */
+  transform: scale(1.03);          /* Slight pop effect */
+}
+
+.people-list li.active {
+  background-color: #19A74D;       /* Selected person */
+  font-weight: bold;
+}
+
+
+/* Page titles */
+.page-title {
+  font-size: 2em;
+  margin-bottom: 16px;
+  text-align: center;
+  color: #19A74D;
+}
+
+.page-subtitle {
+  font-size: 1.5em;
+  margin-bottom: 12px;
+  color: #19A74D;
+}
+
+/* Profile image */
+.profile-img {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto 20px auto;
+  border: 2px solid #19A74D;
+}
+
+/* Fields */
+.field-container {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px 10px;
+  border-radius: 12px;
+  border: 1px solid #19A74D;
+  background-color: #F8F8F8;
+  color: #242424;
+  font-size: 1em;
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #19A74D;
+  box-shadow: 0 0 5px #19A74D;
+}
+
+/* Read-only field display */
+.field-value {
+  padding: 10px;
+  background-color: #9CA190;
+  border-radius: 12px;
+  color: #F8F8F8;
 }

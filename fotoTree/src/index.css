@@ -1,4 +1,4 @@
-:root {
+/* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -64,5 +64,101 @@ button:focus-visible {
   }
   button {
     background-color: #f9f9f9;
+  }
+} */
+
+
+:root {
+  color-scheme: dark;
+  color: #F8F8F8;
+  background-color: #437A45;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Headings & text */
+h1, h2, h3, h4 { color: #F8F8F8; margin: 0.5em 0; }
+p, span { font-size: 1.1em; color: #F8F8F8; }
+
+/* --- Buttons --- */
+button,
+.SignInButton,
+button.inline-button {
+  background-color: #19A74D;
+  color: #F8F8F8;
+  border: 2px solid #19A74D;
+  border-radius: 40px;
+  padding: 1em 2em;
+  font-size: 1.2em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0.5em;
+}
+
+button:hover,
+.SignInButton:hover,
+button.inline-button:hover {
+  background-color: #437A45;
+  color: #19A74D;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+button:focus,
+.SignInButton:focus,
+button.inline-button:focus {
+  outline: 3px solid #F8F8F8;
+  outline-offset: 2px;
+}
+
+/* --- Links as buttons --- */
+a,
+a.inline-link,
+.LinkButton {
+  display: inline-block;
+  background-color: #19A74D;
+  color: #F8F8F8;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 40px;
+  padding: 1em 2em;
+  font-size: 1.2em;
+  margin: 0.5em;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+a:hover,
+a.inline-link:hover,
+.LinkButton:hover {
+  background-color: #437A45;
+  color: #19A74D;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  button, .SignInButton, button.inline-button,
+  a, a.inline-link, .LinkButton {
+    font-size: 1.1em;
+    padding: 0.9em 1.8em;
+  }
+}
+
+@media (max-width: 768px) {
+  button, .SignInButton, button.inline-button,
+  a, a.inline-link, .LinkButton {
+    font-size: 1em;
+    padding: 0.8em 1.6em;
   }
 }

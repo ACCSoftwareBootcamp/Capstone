@@ -1,1 +1,79 @@
+/* LandingPage.css */
 
+/* Page container */
+.landingPage-container {
+  background-color: #437A45;
+  color: #F8F8F8;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Section cards */
+.landing-card {
+  background-color: #2b5b2f;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+/* Title and subtitle */
+.landing-card h3 {
+  color: #19A74D;
+  margin-bottom: 12px;
+}
+
+.landing-card p {
+  margin-bottom: 16px;
+}
+
+/* Sign-in button (Clerk) */
+.landing-card .sign-in-btn {
+  background-color: #19A74D;
+  color: #F8F8F8;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.landing-card .sign-in-btn:hover {
+  background-color: #1FAF56;
+}
+
+/* Image styling */
+.landing-card img {
+  max-width: 100%;
+  height: auto;
+  margin-top: 20px;
+  border-radius: 12px;
+  border: 2px solid #19A74D;
+}
+
+/* Links for signed-in users */
+.landing-card .link-btn {
+  display: block;
+  background-color: #437A45;
+  color: #F8F8F8;
+  text-decoration: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin: 8px 0;
+  font-weight: 500;
+  transition: 0.3s, 0.2s;
+}
+
+.landing-card .link-btn:hover {
+  background-color: #19A74D;
+  transform: scale(1.03);
+}

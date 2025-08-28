@@ -1,0 +1,103 @@
+/* Header.css */
+
+/* Navbar container */
+.navbar {
+  background-color: #2b5b2f;
+  padding: 12px 24px;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Inner container to space brand & links */
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Brand name */
+.navbar-brand {
+  color: #F8F8F8;
+  font-weight: bold;
+  font-size: 1.6em;
+  text-decoration: none;
+}
+
+.navbar-brand:hover {
+  color: #19A74D;
+  transition: color 0.3s;
+}
+
+/* Navbar links container */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Nav list */
+.navbar-nav {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Nav link */
+.nav-link {
+  color: #F8F8F8;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 500;
+  background-color: #437A45;
+  transition: 0.3s, 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #1FAF56;
+  transform: scale(1.05);
+  color: #F8F8F8;
+}
+
+/* Clerk UserButton container */
+.navbar-user-button .clerk-user-button {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  transition: transform 0.2s;
+}
+
+.navbar-user-button .clerk-user-button:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .navbar-nav {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .nav-link {
+    width: 180px;
+    text-align: center;
+  }
+
+  .navbar-user-button {
+    margin-top: 10px;
+  }
+}

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import './CustomNodes.css';
+import Header from "../header/Header";
+
 
 const CustomNode = ({ id, data, selected }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -88,6 +90,9 @@ const CustomNode = ({ id, data, selected }) => {
   }, [isEditing]);
 
   return (
+
+   
+
     <div
       className={`custom-node ${selected ? 'selected' : ''}`}
       onDoubleClick={startEditing}
