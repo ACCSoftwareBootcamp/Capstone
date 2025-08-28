@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
+import Footer from "../components/footer/Footer"
 
 const MyPeople = () => {
   const { user, isLoaded } = useUser();
@@ -378,6 +379,7 @@ const MyPeople = () => {
   };
 
   return (
+    <>
     <div style={containerStyle}>
       {/* Left side profile card */}
       <div style={profileStyle}>
@@ -605,6 +607,9 @@ const MyPeople = () => {
         </div>
       )}
     </div>
+    <br /><br />
+    <Footer />
+    </>
   );
 };
 
