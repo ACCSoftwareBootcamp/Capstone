@@ -452,46 +452,148 @@ const handleDeletePhoto = (photoUrl) => {
                 </>
               )}
 
-              {/* --- Photo Viewer --- */}
-              <div style={profileImgWrapper}>
-                {currentPhoto ? (
-                  <>
-                    <img
-                      src={currentPhoto}
-                      alt="profile"
-                      style={profileImgStyle}
-                    />
-                    {!isEditing && displayedPhotos.length > 1 && (
-                      <>
-                        <button
-                          onClick={handlePrevPhoto}
-                          style={arrowButtonStyle("left")}
-                        >
-                          ◀
-                        </button>
-                        <button
-                          onClick={handleNextPhoto}
-                          style={arrowButtonStyle("right")}
-                        >
-                          ▶
-                        </button>
-                      </>
-                    )}
-                    {isEditing && (
-                      <button
-                        onClick={() => handleDeletePhoto(currentPhoto)}
-                        style={deletePhotoButtonStyle}
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <div style={{ fontStyle: "italic", color: "#666" }}>
-                    No photos available
-                  </div>
-                )}
-              </div>
+// Replace the existing photo viewer section with this enhanced version:
+
+{/* --- Enhanced Photo Viewer --- */}
+<div style={profileImgWrapper}>
+  {currentPhoto ? (
+    <>
+      <img
+        src={currentPhoto}
+        alt="profile"
+        style={profileImgStyle}
+      />
+      {/* Show navigation arrows in both view and edit mode when multiple photos */}
+      {displayedPhotos.length > 1 && (
+        <>
+          <button
+            onClick={handlePrevPhoto}
+            style={arrowButtonStyle("left")}
+          >
+            ◀
+          </button>
+          <button
+            onClick={handleNextPhoto}
+            style={arrowButtonStyle("right")}
+          >
+            ▶
+          </button>
+        </>
+      )}
+      {/* Delete button only in edit mode */}
+      {isEditing && (
+        <button
+          onClick={() => handleDeletePhoto(currentPhoto)}
+          style={deletePhotoButtonStyle}
+        >
+          ✕
+        </button>
+      )}
+    </>
+  ) : (
+    <div style={{ fontStyle: "italic", color: "#666" }}>
+      No photos available
+    </div>
+  )}
+  
+  {/* Photo counter when multiple photos exist */}
+  {displayedPhotos.length > 1 && (
+    <div style={{
+      textAlign: "center",
+      fontSize: "14px",
+      color: "#666",
+      marginTop: "8px"
+    }}>
+      {currentPhotoIndex + 1} of {displayedPhotos.length}
+    </div>
+  )}
+</div>
+
+{/* Preview thumbnails for photos marked for deletion */}
+{isEditing && photosToDelete.length > 0 && (
+  <div style={{
+    marginBottom: "16px",
+    padding: "12px",
+    backgroundColor: "#fff3cd",
+    border: "1px solid #ffeaa7",
+    borderRadius: "4px"
+  }}>
+    <div style={{
+      fontSize: "14px",
+      fontWeight: "bold",
+      marginBottom: "8px",
+      color: "#856404"
+    }}>
+      Photos marked for deletion:
+    </div>
+    <div style={{
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "8px",
+      justifyContent: "center"
+    }}>
+      {photosToDelete.map((photoUrl, index) => (
+        <div
+          key={index}
+          style={{
+            position: "relative",
+            display: "inline-block"
+          }}
+        >
+          <img
+            src={photoUrl}
+            alt="To be deleted"
+            style={{
+              width: "60px",
+              height: "60px",
+              objectFit: "cover",
+              borderRadius: "4px",
+              border: "2px solid #dc3545",
+              opacity: 0.7
+            }}
+          />
+          <button
+            onClick={() => {
+              // Remove from deletion queue and add back to photos
+              setPhotosToDelete(prev => prev.filter(url => url !== photoUrl));
+              setEditFormData(prev => ({
+                ...prev,
+                photoArray: [...prev.photoArray, photoUrl]
+              }));
+            }}
+            style={{
+              position: "absolute",
+              top: "-8px",
+              right: "-8px",
+              backgroundColor: "#28a745",
+              color: "white",
+              border: "none",
+              borderRadius: "50%",
+              width: "20px",
+              height: "20px",
+              cursor: "pointer",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            ↶
+          </button>
+        </div>
+      ))}
+    </div>
+    <div style={{
+      fontSize: "12px",
+      color: "#856404",
+      marginTop: "8px",
+      fontStyle: "italic",
+      textAlign: "center"
+    }}>
+      Click ↶ to restore a photo, or Save to permanently delete
+    </div>
+  </div>
+)}
 
               {/* Photo upload input */}
               {isEditing && (
