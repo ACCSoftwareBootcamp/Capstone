@@ -2,3 +2,63 @@
     background-color: darkgreen;
     color: white;
 } */
+
+/* Footer.css */
+
+/* Footer container */
+.app-footer {
+  background-color: #437A45;
+  color: #F8F8F8;
+  padding: 10px 15px;
+  margin-top: 100px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  gap: 16px;
+}
+
+/* Divider */
+.footer-divider {
+  width: 90%;
+  border: 1px solid #19A74D;
+  margin: 10px 0;
+  border-radius: 2px;
+}
+
+/* Navigation links container (vertical) */
+.footer-links {
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  gap: 12px;
+  align-items: center;
+}
+
+/* Individual link styling */
+.footer-link {
+  cursor: pointer;
+  padding: 1px 1px;
+  background-color: #2b5b2f;
+  color: #F8F8F8;
+  border-radius: 12px;
+  font-weight: 300;
+  width: 160px; /* optional fixed width for uniformity */
+  text-align: center;
+  transition: 0.3s, 0.2s;
+}
+
+.footer-link:hover {
+  background-color: #1FAF56;
+  transform: scale(1.05);
+}
+
+/* Copyright text */
+.footer-copy p {
+  font-size: 14px;
+  color: #F8F8F8;
+  margin: 0;
+  text-align: center;
+}

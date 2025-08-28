@@ -1,4 +1,4 @@
-// import "../components/landingPage/landingPage.css";
+import "../components/landingPage/landingPage.css";
 import Title from "../components/landingPage/Title";
 import landingPageImg from "../assets/landingPage.png";
 import { SignInButton, SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
@@ -74,17 +74,17 @@ const LandingPage = () => {
   }, [isLoaded, user]);
 
   return (
+    <>
+    <Header />
     <div className="landingPage-container">
       {/* if signed out this all renders */}
       <SignedOut>
-        <Header />
-        <div>
+        
+        <div className="landing-card">
           <Title />
-          <h3>Every Family has a story to tell share yours on FotoTree</h3>
+          <h3>Every Family has a story to tell — share yours on FotoTree</h3>
           <p>Please sign in to get started</p>
-          <SignInButton />
-          <br />
-          <br />
+          <SignInButton className="sign-in-btn" />
           <div>
             <img src={landingPageImg} alt="Computer using FotoTree" />
           </div>
@@ -92,25 +92,29 @@ const LandingPage = () => {
         </div>
       </SignedOut>
 
-      {/* if signed in this all renders */}
       <SignedIn afterSigninUrl="/">
-        <Header />
-        <div>
+        
+        <div className="landing-card">
           <Title />
           <h3>
             The "F" is for <strong>Family</strong>
           </h3>
-          <p>Hi, {firstName} let's check out your family tree!</p>
+          <p>Hi, {firstName}! Let's check out your family tree!</p>
           <p>Click below to view your tree:</p>
-          <Link to="/tree">See my FotoTree!</Link>
-          <br />
-          <Link to="/person">Add People to use in your tree!</Link>
-          <br />
-          <Link to="/people">See my family members!</Link>
+          <Link to="/tree" className="link-btn">
+            See my FotoTree!
+          </Link>
+          <Link to="/person" className="link-btn">
+            Add People to your tree
+          </Link>
+          <Link to="/people" className="link-btn">
+            See my family members
+          </Link>
           <Footer />
         </div>
       </SignedIn>
     </div>
+    </>
   );
 };
 
