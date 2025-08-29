@@ -15,10 +15,9 @@ const MyPeople = () => {
   const [newFile, setNewFile] = useState(null);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0); //  track which photo is showing
   const [isSaving, setIsSaving] = useState(false); // Loading state for save operation
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Delete confirmation 
-  const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete operation  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Delete confirmation
+  const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete operation
   const [photosToDelete, setPhotosToDelete] = useState([]); // track deleted photos
-
 
   // Fetch mongo user id
   useEffect(() => {
@@ -110,84 +109,82 @@ const MyPeople = () => {
 
   // Handle save - includes photo upload if needed
   // Handle save - includes photo upload if needed
-const handleSave = async () => {
-  setIsSaving(true);
-  try {
-    let updatedPhotoArray = [...(editFormData.photoArray || [])];
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      let updatedPhotoArray = [...(editFormData.photoArray || [])];
 
-    // If we have a new file, upload it first
-    if (newFile) {
-      console.log("Uploading new file:", newFile.name);
+      // If we have a new file, upload it first
+      if (newFile) {
+        console.log("Uploading new file:", newFile.name);
 
-      const formData = new FormData();
-      formData.append("file", newFile);
+        const formData = new FormData();
+        formData.append("file", newFile);
 
-      const uploadRes = await fetch("http://localhost:5001/upload", {
-        method: "POST",
-        body: formData,
-      });
+        const uploadRes = await fetch("http://localhost:5001/upload", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!uploadRes.ok) {
-        const errorText = await uploadRes.text();
-        console.error("Upload failed:", uploadRes.status, errorText);
-        throw new Error("Photo upload failed");
+        if (!uploadRes.ok) {
+          const errorText = await uploadRes.text();
+          console.error("Upload failed:", uploadRes.status, errorText);
+          throw new Error("Photo upload failed");
+        }
+
+        const uploadResult = await uploadRes.json();
+        const imageUrl = uploadResult.imageUrl;
+
+        updatedPhotoArray.push(imageUrl); // 👈 append new photo
       }
 
-      const uploadResult = await uploadRes.json();
-      const imageUrl = uploadResult.imageUrl;
+      // Send PUT request with updated form data
+      const putData = { ...editFormData, photoArray: updatedPhotoArray };
+      console.log("Sending PUT request with data:", putData);
 
-      updatedPhotoArray.push(imageUrl); // 👈 append new photo
+      const response = await fetch(
+        `http://localhost:5001/person/${selectedPerson._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(putData),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update person");
+      const updatedPerson = await response.json();
+
+      // --- new: send DELETE requests for photos marked for deletion ---
+      for (const photoUrl of photosToDelete) {
+        try {
+          await fetch(
+            `http://localhost:5001/person/${
+              selectedPerson._id
+            }/photo/${encodeURIComponent(photoUrl)}`,
+            { method: "DELETE" }
+          );
+        } catch (err) {
+          console.error("Error deleting photo:", err);
+        }
+      }
+      setPhotosToDelete([]); // clear queue after save
+
+      setPeople((prev) =>
+        prev.map((p) => (p._id === updatedPerson._id ? updatedPerson : p))
+      );
+      setSelectedPerson(updatedPerson);
+      setIsEditing(false);
+      setNewFile(null);
+      console.log("Person updated successfully:", updatedPerson);
+    } catch (error) {
+      console.error("Error updating person:", error);
+      alert("Failed to save changes. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-
-    // Send PUT request with updated form data
-    const putData = { ...editFormData, photoArray: updatedPhotoArray };
-    console.log("Sending PUT request with data:", putData);
-
-    const response = await fetch(
-      `http://localhost:5001/person/${selectedPerson._id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(putData),
-      }
-    );
-
-    if (!response.ok) throw new Error("Failed to update person");
-    const updatedPerson = await response.json();
-
-    // --- new: send DELETE requests for photos marked for deletion ---
-    for (const photoUrl of photosToDelete) {
-      try {
-        await fetch(
-          `http://localhost:5001/person/${selectedPerson._id}/photo/${encodeURIComponent(
-            photoUrl
-          )}`,
-          { method: "DELETE" }
-        );
-      } catch (err) {
-        console.error("Error deleting photo:", err);
-      }
-    }
-    setPhotosToDelete([]); // clear queue after save
-
-    setPeople((prev) =>
-      prev.map((p) => (p._id === updatedPerson._id ? updatedPerson : p))
-    );
-    setSelectedPerson(updatedPerson);
-    setIsEditing(false);
-    setNewFile(null);
-    console.log("Person updated successfully:", updatedPerson);
-  } catch (error) {
-    console.error("Error updating person:", error);
-    alert("Failed to save changes. Please try again.");
-  } finally {
-    setIsSaving(false);
-  }
-};
-
-
+  };
 
   // Handle delete confirmation
   const handleDeleteClick = () => {
@@ -199,13 +196,12 @@ const handleSave = async () => {
 
   //HandleCancel editing
   // Cancel editing and restore original data
-const handleCancel = () => {
-  setIsEditing(false);
-  setEditFormData(selectedPerson); // revert edits
-  setNewFile(null);
-  setPhotosToDelete([]); // clear any queued deletions
-};
-
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditFormData(selectedPerson); // revert edits
+    setNewFile(null);
+    setPhotosToDelete([]); // clear any queued deletions
+  };
 
   // Handle delete person
   const handleDeleteConfirm = async () => {
@@ -235,17 +231,17 @@ const handleCancel = () => {
     }
   };
 
-// Handle photo deletion in edit mode
-const handleDeletePhoto = (photoUrl) => {
-  // Instead of deleting immediately, mark it for deletion on save
-  setPhotosToDelete((prev) => [...prev, photoUrl]);
+  // Handle photo deletion in edit mode
+  const handleDeletePhoto = (photoUrl) => {
+    // Instead of deleting immediately, mark it for deletion on save
+    setPhotosToDelete((prev) => [...prev, photoUrl]);
 
-  setEditFormData((prev) => ({
-    ...prev,
-    photoArray: prev.photoArray.filter((p) => p !== photoUrl),
-  }));
-  setCurrentPhotoIndex(0);
-};
+    setEditFormData((prev) => ({
+      ...prev,
+      photoArray: prev.photoArray.filter((p) => p !== photoUrl),
+    }));
+    setCurrentPhotoIndex(0);
+  };
 
   // Photo navigation
   const handlePrevPhoto = () => {
@@ -425,383 +421,194 @@ const handleDeletePhoto = (photoUrl) => {
 
   return (
     <>
-      <div style={containerStyle}>
-        {/* Left side profile card */}
-        <div style={profileStyle}>
+      <Header />
+      <div className="page-container">
+        <div className="profile-section">
           {selectedPerson ? (
             <>
-              <h2
-                style={{
-                  fontSize: "28px",
-                  fontWeight: "bold",
-                  margin: "0 0 8px",
-                }}
-              >
+              <h2 className="page-title">
                 {isEditing
                   ? getFullName(editFormData)
                   : getFullName(selectedPerson)}
               </h2>
+
               {!isEditing && (
                 <>
-                  <button onClick={handleEdit} style={editButtonStyle}>
+                  <button onClick={handleEdit} className="button btn-edit">
                     Edit
                   </button>
-                  <button onClick={handleDeleteClick} style={deleteButtonStyle}>
+                  <button
+                    onClick={handleDeleteClick}
+                    className="button btn-delete"
+                  >
                     🗑️
                   </button>
                 </>
               )}
 
-// Replace the existing photo viewer section with this enhanced version:
+              <div className="profile-img-wrapper">
+                {currentPhoto ? (
+                  <>
+                    <img
+                      src={currentPhoto}
+                      alt="profile"
+                      className="profile-img"
+                    />
+                    {displayedPhotos.length > 1 && (
+                      <>
+                        <button
+                          onClick={handlePrevPhoto}
+                          className="arrow-button left"
+                        >
+                          ◀
+                        </button>
+                        <button
+                          onClick={handleNextPhoto}
+                          className="arrow-button right"
+                        >
+                          ▶
+                        </button>
+                      </>
+                    )}
+                    {isEditing && (
+                      <button
+                        onClick={() => handleDeletePhoto(currentPhoto)}
+                        className="delete-photo-btn"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ fontStyle: "italic", color: "#666" }}>
+                    No photos available
+                  </div>
+                )}
+                {displayedPhotos.length > 1 && (
+                  <div style={{ marginTop: "8px", fontSize: "14px" }}>
+                    {currentPhotoIndex + 1} of {displayedPhotos.length}
+                  </div>
+                )}
+              </div>
 
-{/* --- Enhanced Photo Viewer --- */}
-<div style={profileImgWrapper}>
-  {currentPhoto ? (
-    <>
-      <img
-        src={currentPhoto}
-        alt="profile"
-        style={profileImgStyle}
-      />
-      {/* Show navigation arrows in both view and edit mode when multiple photos */}
-      {displayedPhotos.length > 1 && (
-        <>
-          <button
-            onClick={handlePrevPhoto}
-            style={arrowButtonStyle("left")}
-          >
-            ◀
-          </button>
-          <button
-            onClick={handleNextPhoto}
-            style={arrowButtonStyle("right")}
-          >
-            ▶
-          </button>
-        </>
-      )}
-      {/* Delete button only in edit mode */}
-      {isEditing && (
-        <button
-          onClick={() => handleDeletePhoto(currentPhoto)}
-          style={deletePhotoButtonStyle}
-        >
-          ✕
-        </button>
-      )}
-    </>
-  ) : (
-    <div style={{ fontStyle: "italic", color: "#666" }}>
-      No photos available
-    </div>
-  )}
-  
-  {/* Photo counter when multiple photos exist */}
-  {displayedPhotos.length > 1 && (
-    <div style={{
-      textAlign: "center",
-      fontSize: "14px",
-      color: "#666",
-      marginTop: "8px"
-    }}>
-      {currentPhotoIndex + 1} of {displayedPhotos.length}
-    </div>
-  )}
-</div>
+              {isEditing && photosToDelete.length > 0 && (
+                <div className="photos-to-delete">
+                  <div>Photos marked for deletion:</div>
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}
+                  >
+                    {photosToDelete.map((photoUrl, index) => (
+                      <div key={index} style={{ position: "relative" }}>
+                        <img
+                          src={photoUrl}
+                          alt="To delete"
+                          style={{
+                            width: "60px",
+                            height: "60px",
+                            objectFit: "cover",
+                            borderRadius: "4px",
+                            border: "2px solid #dc3545",
+                            opacity: 0.7,
+                          }}
+                        />
+                        <button
+                          onClick={() => {
+                            setPhotosToDelete((prev) =>
+                              prev.filter((url) => url !== photoUrl)
+                            );
+                            setEditFormData((prev) => ({
+                              ...prev,
+                              photoArray: [...prev.photoArray, photoUrl],
+                            }));
+                          }}
+                          className="restore-btn"
+                        >
+                          ↶
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-{/* Preview thumbnails for photos marked for deletion */}
-{isEditing && photosToDelete.length > 0 && (
-  <div style={{
-    marginBottom: "16px",
-    padding: "12px",
-    backgroundColor: "#fff3cd",
-    border: "1px solid #ffeaa7",
-    borderRadius: "4px"
-  }}>
-    <div style={{
-      fontSize: "14px",
-      fontWeight: "bold",
-      marginBottom: "8px",
-      color: "#856404"
-    }}>
-      Photos marked for deletion:
-    </div>
-    <div style={{
-      display: "flex",
-      flexWrap: "wrap",
-      gap: "8px",
-      justifyContent: "center"
-    }}>
-      {photosToDelete.map((photoUrl, index) => (
-        <div
-          key={index}
-          style={{
-            position: "relative",
-            display: "inline-block"
-          }}
-        >
-          <img
-            src={photoUrl}
-            alt="To be deleted"
-            style={{
-              width: "60px",
-              height: "60px",
-              objectFit: "cover",
-              borderRadius: "4px",
-              border: "2px solid #dc3545",
-              opacity: 0.7
-            }}
-          />
-          <button
-            onClick={() => {
-              // Remove from deletion queue and add back to photos
-              setPhotosToDelete(prev => prev.filter(url => url !== photoUrl));
-              setEditFormData(prev => ({
-                ...prev,
-                photoArray: [...prev.photoArray, photoUrl]
-              }));
-            }}
-            style={{
-              position: "absolute",
-              top: "-8px",
-              right: "-8px",
-              backgroundColor: "#28a745",
-              color: "white",
-              border: "none",
-              borderRadius: "50%",
-              width: "20px",
-              height: "20px",
-              cursor: "pointer",
-              fontSize: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-          >
-            ↶
-          </button>
-        </div>
-      ))}
-    </div>
-    <div style={{
-      fontSize: "12px",
-      color: "#856404",
-      marginTop: "8px",
-      fontStyle: "italic",
-      textAlign: "center"
-    }}>
-      Click ↶ to restore a photo, or Save to permanently delete
-    </div>
-  </div>
-)}
-
-              {/* Photo upload input */}
               {isEditing && (
-                <div style={{ marginBottom: "16px" }}>
+                <div>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoChange}
                   />
-                  {newFile && (
-                    <div
-                      style={{
-                        color: "#007bff",
-                        fontSize: "14px",
-                        marginTop: "8px",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      New photo selected: {newFile.name}
-                    </div>
-                  )}
+                  {newFile && <p>New photo selected: {newFile.name}</p>}
                 </div>
               )}
 
-              {/* Save/Cancel buttons */}
               {isEditing && (
-                <div style={{ marginBottom: "20px" }}>
+                <div>
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    style={saveButtonStyle}
+                    className={`button btn-save ${
+                      isSaving ? "btn-disabled" : ""
+                    }`}
                   >
                     {isSaving ? "Saving..." : "Save"}
                   </button>
                   <button
                     onClick={handleCancel}
                     disabled={isSaving}
-                    style={{
-                      ...cancelButtonStyle,
-                      cursor: isSaving ? "not-allowed" : "pointer",
-                      opacity: isSaving ? 0.6 : 1,
-                    }}
+                    className={`button btn-cancel ${
+                      isSaving ? "btn-disabled" : ""
+                    }`}
                   >
                     Cancel
                   </button>
                 </div>
               )}
 
-              {/* Fields grid */}
-              <div style={fieldsGridStyle}>
-                <div style={labelCellStyle}>First Name:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={editFormData.firstName}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.firstName || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Middle Name:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="middleName"
-                      value={editFormData.middleName}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.middleName || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Last Name:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={editFormData.lastName}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.lastName || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Suffix:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="suffix"
-                      value={editFormData.suffix}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.suffix || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Gender:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="gender"
-                      value={editFormData.gender}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.gender || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Birth:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      name="birth"
-                      value={editFormData.birth}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : selectedPerson.birth ? (
-                    new Date(selectedPerson.birth).toLocaleDateString()
-                  ) : (
-                    "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Death:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      name="death"
-                      value={editFormData.death}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : selectedPerson.death ? (
-                    new Date(selectedPerson.death).toLocaleDateString()
-                  ) : (
-                    "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Parents:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="parents"
-                      value={editFormData.parents}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.parents || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Spouse:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="spouseName"
-                      value={editFormData.spouseName}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.spouseName || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Children:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="children"
-                      value={editFormData.children}
-                      onChange={handleInputChange}
-                      style={inputStyle}
-                    />
-                  ) : (
-                    selectedPerson.children || "N/A"
-                  )}
-                </div>
-                <div style={labelCellStyle}>Biography:</div>
-                <div style={valueCellStyle}>
-                  {isEditing ? (
-                    <textarea
-                      name="biography"
-                      value={editFormData.biography}
-                      onChange={handleInputChange}
-                      rows={4}
-                      style={{ ...inputStyle, resize: "vertical" }}
-                    />
-                  ) : (
-                    selectedPerson.biography || "N/A"
-                  )}
-                </div>
+              <div className="fields-grid">
+                {[
+                  ["First Name", "firstName"],
+                  ["Middle Name", "middleName"],
+                  ["Last Name", "lastName"],
+                  ["Suffix", "suffix"],
+                  ["Gender", "gender"],
+                  ["Birth", "birth", "date"],
+                  ["Death", "death", "date"],
+                  ["Parents", "parents"],
+                  ["Spouse", "spouseName"],
+                  ["Children", "children"],
+                  ["Biography", "biography", "textarea"],
+                ].map(([label, field, type]) => (
+                  <React.Fragment key={field}>
+                    <div className="field-label">{label}:</div>
+                    <div className="field-value">
+                      {isEditing ? (
+                        type === "textarea" ? (
+                          <textarea
+                            name={field}
+                            value={editFormData[field]}
+                            onChange={handleInputChange}
+                            rows={4}
+                            className="input-field"
+                          />
+                        ) : (
+                          <input
+                            type={type || "text"}
+                            name={field}
+                            value={editFormData[field]}
+                            onChange={handleInputChange}
+                            className="input-field"
+                          />
+                        )
+                      ) : (
+                        selectedPerson[field] ||
+                        (type === "date" && selectedPerson[field]
+                          ? new Date(selectedPerson[field]).toLocaleDateString()
+                          : "N/A")
+                      )}
+                    </div>
+                  </React.Fragment>
+                ))}
               </div>
             </>
           ) : (
@@ -809,34 +616,27 @@ const handleDeletePhoto = (photoUrl) => {
           )}
         </div>
 
-        {/* Right side people list */}
-        <div style={listStyle}>
+        <div className="people-section">
           <h3>People</h3>
-          {people.map((person) => (
-            <div
-              key={person._id}
-              style={listItemStyle(selectedPerson?._id === person._id)}
-              onClick={() => setSelectedPerson(person)}
-              onMouseOver={(e) =>
-                (e.currentTarget.style.backgroundColor = "#e0e0e0")
-              }
-              onMouseOut={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  selectedPerson?._id === person._id ? "#d3d3d3" : "transparent")
-              }
-            >
-              {getFullName(person)}
-            </div>
-          ))}
+          <ul className="people-list">
+            {people.map((person) => (
+              <li
+                key={person._id}
+                className={selectedPerson?._id === person._id ? "active" : ""}
+                onClick={() => setSelectedPerson(person)}
+              >
+                {getFullName(person)}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
-
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div style={modalOverlayStyle}>
           <div style={modalContentStyle}>
-            <h3>Confirm Delete</h3>
-            <p>
+            <h3 className="confirm-delete">Confirm Delete</h3>
+            <p className="confirm-delete">
               Are you sure you want to delete{" "}
               <strong>{getFullName(selectedPerson)}</strong>? This action cannot
               be undone.
@@ -847,20 +647,20 @@ const handleDeletePhoto = (photoUrl) => {
                 disabled={isDeleting}
                 style={confirmDeleteButtonStyle}
               >
-                {isDeleting ? "Deleting..." : "Yes, Delete"}
-              </button>
+                {isDeleting ? "Deleting..." : "Yes, Delete"}{" "}
+              </button>{" "}
               <button
                 onClick={handleDeleteCancel}
                 disabled={isDeleting}
                 style={cancelDeleteButtonStyle}
               >
-                Cancel
-              </button>
-            </div>
-          </div>
+                {" "}
+                Cancel{" "}
+              </button>{" "}
+            </div>{" "}
+          </div>{" "}
         </div>
-      )}
-
+      )}{" "}
       <Footer />
     </>
   );
