@@ -23,10 +23,10 @@ const person = require("./models/person");
 // open up the CORS setting server so any browser client can access this
 app.use(
   cors({
-    origin: "http://localhost:5173", // frontend URL
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // if you need to send cookies/auth headers
+    // origin: "http://localhost:5173", // frontend URL
+    // methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    // allowedHeaders: ["Content-Type", "Authorization"],
+    // credentials: true, // if you need to send cookies/auth headers
   })
 );
 
