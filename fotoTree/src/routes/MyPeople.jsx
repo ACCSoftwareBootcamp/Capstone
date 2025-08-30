@@ -452,7 +452,7 @@ const handleDeletePhoto = (photoUrl) => {
                 </>
               )}
 
-// Replace the existing photo viewer section with this enhanced version:
+
 
 {/* --- Enhanced Photo Viewer --- */}
 <div style={profileImgWrapper}>
@@ -595,7 +595,7 @@ const handleDeletePhoto = (photoUrl) => {
   </div>
 )}
 
-              {/* Photo upload input */}
+              {/* Photo upload input with preview */}
               {isEditing && (
                 <div style={{ marginBottom: "16px" }}>
                   <input
@@ -604,15 +604,73 @@ const handleDeletePhoto = (photoUrl) => {
                     onChange={handlePhotoChange}
                   />
                   {newFile && (
-                    <div
-                      style={{
-                        color: "#007bff",
+                    <div style={{
+                      marginTop: "12px",
+                      padding: "12px",
+                      backgroundColor: "#d4edda",
+                      border: "1px solid #c3e6cb",
+                      borderRadius: "4px"
+                    }}>
+                      <div style={{
                         fontSize: "14px",
-                        marginTop: "8px",
+                        fontWeight: "bold",
+                        marginBottom: "8px",
+                        color: "#155724"
+                      }}>
+                        New photo to be added:
+                      </div>
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginBottom: "8px"
+                      }}>
+                        <div style={{
+                          position: "relative",
+                          display: "inline-block"
+                        }}>
+                          <img
+                            src={URL.createObjectURL(newFile)}
+                            alt="Preview"
+                            style={{
+                              width: "80px",
+                              height: "80px",
+                              objectFit: "cover",
+                              borderRadius: "4px",
+                              border: "2px solid #28a745"
+                            }}
+                          />
+                          <button
+                            onClick={() => setNewFile(null)}
+                            style={{
+                              position: "absolute",
+                              top: "-8px",
+                              right: "-8px",
+                              backgroundColor: "#dc3545",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "50%",
+                              width: "20px",
+                              height: "20px",
+                              cursor: "pointer",
+                              fontSize: "12px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{
+                        fontSize: "12px",
+                        color: "#155724",
                         fontStyle: "italic",
-                      }}
-                    >
-                      New photo selected: {newFile.name}
+                        textAlign: "center"
+                      }}>
+                        {newFile.name} • Click ✕ to remove
+                      </div>
                     </div>
                   )}
                 </div>
