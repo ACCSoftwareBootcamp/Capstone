@@ -5,6 +5,9 @@ import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
 import FlowTree from "../components/ReactFlowTree/FlowTree";
 
+//get base url from env file for deployment
+const BASEURL = import.meta.env.VITE_BASEURL
+
 const MyTree = () => {
   const { user } = useUser();
   const [treeData, setTreeData] = useState(null);
@@ -14,7 +17,7 @@ const MyTree = () => {
   useEffect(() => {
     // clerk id to get user's mongoId to reference the tree then load it
     const fetchMongoUserId = async () => {
-      const res = await fetch(`http://localhost:5001/user/${user.id}`);
+      const res = await fetch(`${BASEURL}/user/${user.id}`);
       const data = await res.json();
       setMongoId(data._id);
       console.log("Mongo user data:", data);
@@ -27,7 +30,7 @@ const MyTree = () => {
 const fetchTree = async (mongoId) => {
   try {
     console.log("Fetching tree for Mongo ID:", mongoId);
-    const res = await fetch(`http://localhost:5001/tree/${mongoId}`);
+    const res = await fetch(`${BASEURL}/tree/${mongoId}`);
     if (!res.ok) throw new Error("No tree found");
 
     const data = await res.json();

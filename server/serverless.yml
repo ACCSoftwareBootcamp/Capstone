@@ -1,0 +1,30 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: jsmeezy
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: fototreeapp
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: FotoTree
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  # Uncomment to easily set up a custom domain. Read the docs for more details:
+  # https://www.serverless.com/framework/docs/providers/aws/guide/domains
+  # domain: api.example.com
+  region: us-east-1
+  
+functions:
+  api:
+    handler: index.handler
+    events:
+      - httpApi: "*"
+    environment:
+      MONGO_USER: "acc"
+      MONGO_PASSWORD: "new_password"
+      MONGO_HOST: "mongo.accsoftwarebootcamp.com"
+      MONGO_DB: "fotoTree"
+      MONGO_PORT: "27017"
+      URI: 'mongodb://mongo.accsoftwarebootcamp.com:27017'
+      CLOUD_NAME: "djeclcglg"
+      API_KEY: "642196135587988"
+      API_SECRET: "VPC-CPxHto625LKb4-W7l8CiZhU"

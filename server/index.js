@@ -1,3 +1,5 @@
+//sls deploy base url https://zloswwwo4d.execute-api.us-east-1.amazonaws.com
+
 //use express to run server through node.js
 const express = require("express");
 //create an instance of express
@@ -7,6 +9,7 @@ const PORT = process.env.PORT || 5001;
 //use a logger to track requests
 const logger = require("morgan");
 const morgan = require("morgan");
+const serverless = require("serverless-http");
 
 //use dotenv to read .env file
 const dotenv = require("dotenv").config({ path: "./.env" });
@@ -357,7 +360,7 @@ app.delete("/person/:id", function (req, res) {
       res.status(400).json({ message: "Error deleting from Mongo person" });
     });
 });
-// DELETE 
+// DELETE
 //TODO-needs user delete
 
 // DELETE a photo from a person by ID and photo URL
@@ -388,7 +391,9 @@ app.delete("/person/:id/photo/:photoUrl", async (req, res) => {
     let publicId;
     try {
       if (!decodedPhotoUrl.includes("/upload/")) {
-        throw new Error("URL doesn't contain /upload/ - might not be a Cloudinary URL");
+        throw new Error(
+          "URL doesn't contain /upload/ - might not be a Cloudinary URL"
+        );
       }
 
       // Extract everything after /upload/
@@ -406,11 +411,10 @@ app.delete("/person/:id/photo/:photoUrl", async (req, res) => {
       // Remove file extension
       publicId = withoutVersion.replace(/\.[^/.]+$/, "");
       console.log("Final public ID:", publicId);
-
     } catch (extractionError) {
       console.error("Error extracting public ID:", extractionError.message);
       console.log("Attempting alternative extraction method...");
-      
+
       // Alternative: try to extract filename without full path
       const urlParts = decodedPhotoUrl.split("/");
       const filename = urlParts[urlParts.length - 1];
@@ -420,33 +424,36 @@ app.delete("/person/:id/photo/:photoUrl", async (req, res) => {
 
     if (!publicId) {
       console.error("Could not extract public ID from URL:", decodedPhotoUrl);
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Could not extract public ID from photo URL",
-        photoUrl: decodedPhotoUrl 
+        photoUrl: decodedPhotoUrl,
       });
     }
 
-    console.log("Attempting to delete from Cloudinary with public ID:", publicId);
+    console.log(
+      "Attempting to delete from Cloudinary with public ID:",
+      publicId
+    );
 
     // Delete from Cloudinary
     const cloudResult = await cloudinary.uploader.destroy(publicId);
     console.log("Cloudinary delete result:", cloudResult);
 
     // Check if Cloudinary deletion was successful
-    if (cloudResult.result !== 'ok' && cloudResult.result !== 'not found') {
+    if (cloudResult.result !== "ok" && cloudResult.result !== "not found") {
       console.error("Cloudinary deletion failed:", cloudResult);
       // Continue anyway to remove from database
     }
 
     // Remove URL from Mongo person - check both encoded and decoded versions
     const updateResult = await person.findByIdAndUpdate(
-      id, 
+      id,
       {
-        $pull: { 
-          photoArray: { 
-            $in: [photoUrl, decodedPhotoUrl] 
-          } 
-        }
+        $pull: {
+          photoArray: {
+            $in: [photoUrl, decodedPhotoUrl],
+          },
+        },
       },
       { new: true }
     );
@@ -457,15 +464,14 @@ app.delete("/person/:id/photo/:photoUrl", async (req, res) => {
       message: "Photo deletion attempted",
       cloudinaryResult: cloudResult,
       publicIdUsed: publicId,
-      databaseUpdateSuccess: !!updateResult
+      databaseUpdateSuccess: !!updateResult,
     });
-
   } catch (error) {
     console.error("Error in delete route:", error);
-    res.status(500).json({ 
-      message: "Error deleting photo", 
+    res.status(500).json({
+      message: "Error deleting photo",
       error: error.message,
-      photoUrl: photoUrl 
+      photoUrl: photoUrl,
     });
   }
 });
@@ -486,6 +492,11 @@ app.delete("/tree/:id", function (req, res) {
 });
 
 //listen
-app.listen(PORT, () =>
-  console.log(`FotoTree App is listening on PORT: ${PORT} `)
-);
+//if running serverless---doesn't need to listen
+if (require.main === module) {
+  app.listen(PORT, () =>
+    console.log(`FotoTree App is listening on PORT: ${PORT} `)
+  );
+} else {
+    module.exports.handler = serverless(app);
+}

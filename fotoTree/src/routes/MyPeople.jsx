@@ -19,6 +19,8 @@ const MyPeople = () => {
   const [isDeleting, setIsDeleting] = useState(false); // Loading state for delete operation  
   const [photosToDelete, setPhotosToDelete] = useState([]); // track deleted photos
 
+//get base url from env file for deployment
+const BASEURL = import.meta.env.VITE_BASEURL
 
   // Fetch mongo user id
   useEffect(() => {
@@ -26,7 +28,7 @@ const MyPeople = () => {
 
     const fetchMongoUserId = async () => {
       try {
-        const res = await fetch(`http://localhost:5001/user/${user.id}`);
+        const res = await fetch(`${BASEURL}/user/${user.id}`);
         if (!res.ok) throw new Error("User not found in Mongo");
         const data = await res.json();
         setMongoId(data._id);
@@ -45,7 +47,7 @@ const MyPeople = () => {
     const fetchPeople = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5001/person?creator=${mongoId}`
+          `${BASEURL}/person?creator=${mongoId}`
         );
         if (!res.ok) throw new Error("Failed to fetch people");
         const data = await res.json();
@@ -122,7 +124,7 @@ const handleSave = async () => {
       const formData = new FormData();
       formData.append("file", newFile);
 
-      const uploadRes = await fetch("http://localhost:5001/upload", {
+      const uploadRes = await fetch(`${BASEURL}/upload`, {
         method: "POST",
         body: formData,
       });
@@ -144,7 +146,7 @@ const handleSave = async () => {
     console.log("Sending PUT request with data:", putData);
 
     const response = await fetch(
-      `http://localhost:5001/person/${selectedPerson._id}`,
+      `${BASEURL}/person/${selectedPerson._id}`,
       {
         method: "PUT",
         headers: {
@@ -161,7 +163,7 @@ const handleSave = async () => {
     for (const photoUrl of photosToDelete) {
       try {
         await fetch(
-          `http://localhost:5001/person/${selectedPerson._id}/photo/${encodeURIComponent(
+          `${BASEURL}/person/${selectedPerson._id}/photo/${encodeURIComponent(
             photoUrl
           )}`,
           { method: "DELETE" }
@@ -212,7 +214,7 @@ const handleCancel = () => {
     setIsDeleting(true);
     try {
       const personDeleteRes = await fetch(
-        `http://localhost:5001/person/${selectedPerson._id}`,
+        `${BASEURL}/person/${selectedPerson._id}`,
         { method: "DELETE" }
       );
 

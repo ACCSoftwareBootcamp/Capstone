@@ -13,6 +13,9 @@ import {
   ReactFlowProvider,
 } from "@xyflow/react";
 
+//get base url from env file for deployment
+const BASEURL = import.meta.env.VITE_BASEURL
+
 import "@xyflow/react/dist/style.css";
 import CustomNode from "../ReactFlowTree/CustomNodes";
 import Header from "../header/Header";
@@ -52,7 +55,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     if (!mongoId) return;
     const fetchPeople = async () => {
       try {
-        const res = await fetch(`http://localhost:5001/person?creator=${mongoId}`);
+        const res = await fetch(`${BASEURL}/person?creator=${mongoId}`);
         if (!res.ok) throw new Error("Failed to fetch people");
         const data = await res.json();
         setPeople(data);
@@ -198,7 +201,7 @@ const Flow = ({ initialNodes, initialEdges, treeId, mongoId }) => {
     };
 
     try {
-      const res = await fetch(`http://localhost:5001/tree/${treeId}`, {
+      const res = await fetch(`${BASEURL}/tree/${treeId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(flowData),
