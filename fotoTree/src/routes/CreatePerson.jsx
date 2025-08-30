@@ -4,6 +4,10 @@ import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
 import { useUser } from "@clerk/clerk-react";
 
+//get base url from env file for deployment
+const BASEURL = import.meta.env.VITE_BASEURL
+console.log(BASEURL)
+
 const CreatePerson = () => {
   const { user, isLoaded } = useUser();
   const [treeId, setTreeId] = useState("");
@@ -30,12 +34,14 @@ const CreatePerson = () => {
 
     const fetchMongoUserAndTree = async () => {
       try {
-        const userRes = await fetch(`http://localhost:5001/user/${user.id}`);
+        const url=`${BASEURL}/user/${user.id}`
+        console.log(url)
+        const userRes = await fetch(url);
         if (!userRes.ok) throw new Error("Failed to fetch user");
         const userData = await userRes.json();
         setMongoUser(userData._id);
 
-        const treeRes = await fetch(`http://localhost:5001/tree/${userData._id}`);
+        const treeRes = await fetch(`${BASEURL}/tree/${userData._id}`);
         if (!treeRes.ok) throw new Error("Failed to fetch tree");
         const treeData = await treeRes.json();
         setTreeId(treeData._id);
@@ -66,7 +72,7 @@ const CreatePerson = () => {
       try {
         const uploadFormData = new FormData();
         uploadFormData.append("file", file);
-        const uploadRes = await fetch("http://localhost:5001/upload", {
+        const uploadRes = await fetch(`${BASEURL}/upload`, {
           method: "POST",
           body: uploadFormData,
         });
@@ -87,7 +93,7 @@ const CreatePerson = () => {
     };
 
     try {
-      const res = await fetch("http://localhost:5001/person", {
+      const res = await fetch(`BASEURL/person`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(personObj),

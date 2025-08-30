@@ -7,6 +7,9 @@ import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
 import { useState, useEffect } from "react";
 
+//get base url from env file for deployment
+const BASEURL = import.meta.env.VITE_BASEURL
+
 const LandingPage = () => {
   // unpack clerk useUser object to personalize landing page once signed in
   const { user, isLoaded } = useUser();
@@ -25,16 +28,19 @@ const LandingPage = () => {
       setFirstName(user.firstName || "");
       setFullName(user.fullName || "");
 
+      
       const getOrCreateMongoUser = async () => {
         try {
+    
           // 1. Try to find existing user
-          const res = await fetch(`http://localhost:5001/user/${user.id}`);
+          const res = await fetch(`${BASEURL}/user/${user.id}`);
+  
           const data = await res.json();
           console.log("User lookup:", data);
           //this message is provided by the server if the user isn't in our database...so we create one if it's received.
           if (data.message === "User not found") {
             console.log("Creating new user in Database...");
-            const createUserRes = await fetch(`http://localhost:5001/user`, {
+            const createUserRes = await fetch(`${BASEURL}/user`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ clerkId: user.id }),
@@ -44,7 +50,7 @@ const LandingPage = () => {
             setMongoUserId(createdUser._id);
 
             // 2. Create a tree for the new user (use freshly created Mongo ID directly)
-            const createTreeRes = await fetch(`http://localhost:5001/tree`, {
+            const createTreeRes = await fetch(`${BASEURL}/tree`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
