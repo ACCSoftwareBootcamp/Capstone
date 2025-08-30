@@ -52,6 +52,7 @@ input, select, textarea {
   margin-top: 15px;
   font-weight: bold;
   color: #F8F8F8;
+  width: 12vw;
 }
 
 /* Form row layout for aligned inputs */
