@@ -425,6 +425,7 @@ const handleDeletePhoto = (photoUrl) => {
 
   return (
     <>
+    <Header />
       <div style={containerStyle}>
         {/* Left side profile card */}
         <div style={profileStyle}>
