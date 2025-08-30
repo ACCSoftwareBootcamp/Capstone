@@ -1,7 +1,6 @@
-
 // Header.jsx
 import './Header.css';
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, UserButton, SignInButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 
 function Header() {
@@ -42,9 +41,7 @@ function Header() {
           </SignedIn>
 
           <SignedOut>
-            <Link to="/sign-in" className="nav-link">
-              Sign In
-            </Link>
+            <SignInButton className="nav-link" />
           </SignedOut>
         </div>
       </div>
