@@ -37,6 +37,7 @@ input, select, textarea {
   border-radius: 15px;
   background-color: rgba(25, 167, 77, 0.15);
   border: 1px solid #19A74D;
+
 }
 
 /* Section headings */
@@ -53,6 +54,7 @@ input, select, textarea {
   font-weight: bold;
   color: #F8F8F8;
   width: 12vw;
+  ;
 }
 
 /* Form row layout for aligned inputs */
@@ -161,4 +163,8 @@ input, select, textarea {
   }
   .create-person-section h3 { font-size: 1.3em; }
   .create-person-submit { font-size: 1.1em; padding: 0.9em 1.8em; }
+}
+
+input {
+  border-radius: 12px;
 }
